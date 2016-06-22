@@ -7,7 +7,7 @@ void NoLockDetectionUnit::DetectAlgorithm( const IplImage_Ptr sourceImage,const 
 	Silk.DetectFlag = ObjectDetectAlgorithm::DETECT_FLAG_APPEAR;
 	Silk.Detect(sourceImage,PedestalRect,PedestalPosition,result);
 	cl.Stop();
-	result.AddItemReport(this->Name,"˿ӡ",result.IsPass,cl.GetTime());
+	result.AddItemReport(this->Name,"丝印",result.IsPass(),cl.GetTime());
 }
 
 ptree NoLockDetectionUnit::GetTree() const

@@ -4,21 +4,59 @@
 class EnglishResultFactory : public ResultFactory
 {
 public:
-	virtual string GetPassString() const { return "Pass!";}
-	virtual string GetPedestalErrorString() const { return "Pedestal Not Find!";}
-	virtual string GetSilkErrorString() const { return "Silk Error!";}
-	virtual string GetLockErrorString() const { return "Lock Error!";}
-	virtual string GetBlueBoxErrorString() const { return "Blue Box Error!";}
+	virtual string GetErrorStringByErrorCode(int ecode) const 
+	{
+		switch (ecode)
+		{
+		case RESULT_PASS:
+			return "Pass!";
+		case RESULT_FAIL_CABLE:
+			return "Cable Not Found!";
+		case RESULT_FAIL_PEDESTAL:
+			return "Pedestal Not Found!";
+		case RESULT_FAIL_SILK:
+			return "Silk Error!";
+		case RESULT_FAIL_LOCK:
+			return "Lock Error!";
+		case RESULT_FAIL_AUTH:
+			return "Software Not Register!";
+		case RESULT_FAIL_CAMERA:
+			return "Camera Not Found!";
+		case RESULT_FAIL_BAR_CODE:
+			return "Please Scan BarCode!";
+		default:
+			return "Unknown Error!";
+		}
+	}
 };
 
 class ChineseResultFactory : public ResultFactory
 {
 public:
-	virtual string GetPassString() const { return "通过!";}
-	virtual string GetPedestalErrorString() const { return "未在红色区域中找到底座!";}
-	virtual string GetSilkErrorString() const { return "丝印位置错误!";}
-	virtual string GetLockErrorString() const { return "锁扣位置错误";}
-	virtual string GetBlueBoxErrorString() const { return "蓝色条位置错误!";}
+	virtual string GetErrorStringByErrorCode(int ecode) const 
+	{
+		switch (ecode)
+		{
+		case RESULT_PASS:
+			return "通过!";
+		case RESULT_FAIL_CABLE:
+			return "排线装配错误!\n请装配排线！";
+		case RESULT_FAIL_PEDESTAL:
+			return "未在红色区域中找到底座!";
+		case RESULT_FAIL_SILK:
+			return "丝印装配错误!\n请拆下排线";
+		case RESULT_FAIL_LOCK:
+			return "锁扣装配错误!";
+		case RESULT_FAIL_AUTH:
+			return "无法使用检测程序，软件未注册!";
+		case RESULT_FAIL_CAMERA:
+			return "获取图片错误！请检查摄像头的连接!";
+		case RESULT_FAIL_BAR_CODE:
+			return "请扫条码!";
+		default:
+			return "未知错误!";
+		}
+	}
 };
 
 shared_ptr<ResultFactory> ResultFactory::GetInstance()
@@ -27,11 +65,10 @@ shared_ptr<ResultFactory> ResultFactory::GetInstance()
 }
 
 
-
 string ReportItem::GetReportString() const
 {
 	string passStr = Pass ? "P" : "F";
-	return string(Unit + "_" + Name + "\t\tBOOL\t\t\t" + passStr + "\t\t1\t" + boost::lexical_cast<string>(Time));
+	return string(Unit + "_" + Name + "\tBOOL\t" + passStr + "\t1\t" + boost::lexical_cast<string>(Time));
 }
 
 void DetectionResult::AddItemReport( const string& unit, const string& name, bool pass, long time )
