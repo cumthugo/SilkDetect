@@ -2,8 +2,12 @@
 
 void NoLockDetectionUnit::DetectAlgorithm( const IplImage_Ptr sourceImage,const CvRect& PedestalRect,DetectionResult& result )
 {
+	Clock_MS cl;
+	cl.Start();
 	Silk.DetectFlag = ObjectDetectAlgorithm::DETECT_FLAG_APPEAR;
 	Silk.Detect(sourceImage,PedestalRect,PedestalPosition,result);
+	cl.Stop();
+	result.AddItemReport(this->Name,"˿ӡ",result.IsPass,cl.GetTime());
 }
 
 ptree NoLockDetectionUnit::GetTree() const

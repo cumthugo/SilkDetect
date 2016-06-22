@@ -23,6 +23,7 @@
 #include "../DetectionLib/ImageSourceFactory.hpp"
 #include "../DetectionLib/License.h"
 
+#include <boost/foreach.hpp>
 
 
 #ifdef _DEBUG
@@ -71,6 +72,7 @@ ON_COMMAND(ID_EDIT_SECOND, &CMFC_DetectionView::OnEditSecond)
 ON_COMMAND(ID_MENU_EDIT_PASSWORD, &CMFC_DetectionView::OnMenuEditPassword)
 ON_COMMAND(ID_REG_SOFT, &CMFC_DetectionView::OnRegSoft)
 ON_UPDATE_COMMAND_UI(ID_REG_SOFT, &CMFC_DetectionView::OnUpdateRegSoft)
+ON_WM_SETFOCUS()
 END_MESSAGE_MAP()
 
 // CMFC_DetectionView 构造/析构
@@ -78,6 +80,7 @@ END_MESSAGE_MAP()
 CMFC_DetectionView::CMFC_DetectionView()
 	: CFormView(CMFC_DetectionView::IDD)
 	, m_ErrorString(_T(""))
+	, m_strBarCode(_T(""))
 {
 	// TODO: 在此处添加构造代码
 
@@ -92,6 +95,8 @@ void CMFC_DetectionView::DoDataExchange(CDataExchange* pDX)
 	CFormView::DoDataExchange(pDX);
 	DDX_Text(pDX, IDC_ERROR_STRING, m_ErrorString);
 	DDX_Control(pDX, IDC_ERROR_STRING, m_editError);
+	DDX_Control(pDX, IDC_EDIT_NUMBER, m_BarCodeEdit);
+	DDX_Text(pDX, IDC_EDIT_NUMBER, m_strBarCode);
 }
 
 BOOL CMFC_DetectionView::PreCreateWindow(CREATESTRUCT& cs)
@@ -159,18 +164,6 @@ void CMFC_DetectionView::OnInitialUpdate()
 	{
 	}
 
-	//add in 2015/4/30
-	CString strScreenShotPath;
-	::GetPrivateProfileString("ScreenShot","Path","D:\\ScreenShot",strScreenShotPath.GetBuffer(255),255,".\\Config.ini");
-	strScreenShotPath.ReleaseBuffer();
-	strScreenShotPath.TrimRight("\\");
-	::WritePrivateProfileString("ScreenShot","Path",strScreenShotPath,".\\Config.ini");
-	itsScreenShotPath = strScreenShotPath.GetString();
-	itsMaxImagesPerFolder = ::GetPrivateProfileInt("ScreenShot","MaxImages",400,".\\Config.ini");
-	CString strMaxImage;
-	strMaxImage.Format("%d",itsMaxImagesPerFolder);
-	::WritePrivateProfileString("ScreenShot","MaxImages",strMaxImage,".\\Config.ini");
-
 	//读取配置文件
 	int comPort = ::GetPrivateProfileInt("COM","Port",1,".\\Config.ini");
 	CString StrPort;
@@ -217,6 +210,7 @@ CMFC_DetectionDoc* CMFC_DetectionView::GetDocument() const // 非调试版本是内联的
 // CMFC_DetectionView 消息处理程序
 void CMFC_DetectionView::OnBnClickedGetPic()
 {
+	ForNextNumberInput();
 	IplImage_Ptr img = cvLoadImage("d:\\test.jpg");
 	Detect(img,GetDetectionProgram());
 	
@@ -236,26 +230,39 @@ void CMFC_DetectionView::OnBnClickedGetPic2()
 bool CMFC_DetectionView::Detect( IplImage_Ptr img ,shared_ptr<DetectionProgram> dp )
 {
 	DetectionResult dr;
+	UpdateData(TRUE);
 	if(PassLicense())
 	{
-		if(img)
+		if(m_strBarCode != "")
 		{
-			try
+			if(img)
 			{
-				dp->SetScreenShot(itsScreenShotPath+ "\\" +dp->Name,itsMaxImagesPerFolder); //add in 2015/4/28
-				dp->Detect(img,dr);
+				m_startTimer = std::time(NULL);
+				try
+				{
+					dp->Detect(img,dr);
+				}
+				catch(const cv::Exception& e)
+				{
+					dr.IsPass = false;
+					dr.ErrorString = e.err;
+				}
+				m_stopTimer = std::time(NULL);
+				//输出report
+				WriteReport(dr);
 			}
-			catch(const cv::Exception& e)
+			else
 			{
 				dr.IsPass = false;
-				dr.ErrorString = e.err;
-			}		
+				dr.ErrorString = "获取图片错误！请检查摄像头的连接！";
+			}
 		}
 		else
 		{
 			dr.IsPass = false;
-			dr.ErrorString = "获取图片错误！请检查摄像头的连接！";
+			dr.ErrorString = "请扫条码！";
 		}
+		
 	}
 	else
 	{
@@ -315,11 +322,13 @@ void CMFC_DetectionView::OnSize(UINT nType, int cx, int cy)
 
 		int center_x = (result_x + cx )/2;
 
-		GetDlgItem(IDC_GET_PIC)->SetWindowPos(NULL,center_x - 40,20,0,0,SWP_NOZORDER | SWP_NOSIZE);
-		GetDlgItem(IDC_GET_PIC2)->SetWindowPos(NULL,center_x - 40, 50,0,0,SWP_NOZORDER | SWP_NOSIZE);
-		GetDlgItem(IDC_GET_PIC3)->SetWindowPos(NULL,center_x - 40, 80,0,0,SWP_NOZORDER | SWP_NOSIZE);
-		GetDlgItem(IDC_STATE_PIC)->SetWindowPos(NULL,center_x - 40,result_y / 2 - 50,0,0,SWP_NOZORDER | SWP_NOSIZE);
-		GetDlgItem(IDC_ERROR_STRING)->SetWindowPos(NULL,center_x - 110,result_y - 150,0,0,SWP_NOZORDER | SWP_NOSIZE);
+		GetDlgItem(IDC_TXT_NUMBER)->SetWindowPos(NULL,center_x - 85,25,0,0,SWP_NOZORDER | SWP_NOSIZE);
+		GetDlgItem(IDC_EDIT_NUMBER)->SetWindowPos(NULL,center_x - 40,20,0,0,SWP_NOZORDER | SWP_NOSIZE);
+		GetDlgItem(IDC_GET_PIC)->SetWindowPos(NULL,center_x - 40,20 + 50,0,0,SWP_NOZORDER | SWP_NOSIZE);
+		GetDlgItem(IDC_GET_PIC2)->SetWindowPos(NULL,center_x - 40, 50+ 50,0,0,SWP_NOZORDER | SWP_NOSIZE);
+		GetDlgItem(IDC_GET_PIC3)->SetWindowPos(NULL,center_x - 40, 80+ 50,0,0,SWP_NOZORDER | SWP_NOSIZE);
+		GetDlgItem(IDC_STATE_PIC)->SetWindowPos(NULL,center_x - 40,result_y / 2,0,0,SWP_NOZORDER | SWP_NOSIZE);
+		GetDlgItem(IDC_ERROR_STRING)->SetWindowPos(NULL,center_x - 110,result_y - 100,0,0,SWP_NOZORDER | SWP_NOSIZE);
 	}
 	
 }
@@ -347,21 +356,19 @@ void CMFC_DetectionView::OnPaint()
 
 void CMFC_DetectionView::OnMenuSelectProgram()
 {
-	//加密
-	if(PassPassword())
+	//CProgramSelectDialog dlg(DIALOG_SELECT);
+	//dlg.DoModal();
+	CSelectProgramDialog dlg;
+	dlg.m_FirstStepLine = &m_FirstStepLine;
+	dlg.m_SecondStepLine = &m_SecondStepLine;
+	dlg.m_FirstProgram = m_FirstProgram;
+	dlg.m_SecondProgram = m_SecondProgram;
+	if(dlg.DoModal() == IDOK)
 	{
-		CSelectProgramDialog dlg;
-		dlg.m_FirstStepLine = &m_FirstStepLine;
-		dlg.m_SecondStepLine = &m_SecondStepLine;
-		dlg.m_FirstProgram = m_FirstProgram;
-		dlg.m_SecondProgram = m_SecondProgram;
-		if(dlg.DoModal() == IDOK)
-		{
-			m_FirstProgram = dlg.m_FirstProgram;
-			m_SecondProgram = dlg.m_SecondProgram;
-			::WritePrivateProfileString("Program","FirstProgramName",m_FirstProgram->Name.c_str(),".\\Config.ini");
-			::WritePrivateProfileString("Program","SecondProgramName",m_SecondProgram->Name.c_str(),".\\Config.ini");
-		}
+		m_FirstProgram = dlg.m_FirstProgram;
+		m_SecondProgram = dlg.m_SecondProgram;
+		::WritePrivateProfileString("Program","FirstProgramName",m_FirstProgram->Name.c_str(),".\\Config.ini");
+		::WritePrivateProfileString("Program","SecondProgramName",m_SecondProgram->Name.c_str(),".\\Config.ini");
 	}
 }
 
@@ -499,4 +506,109 @@ void CMFC_DetectionView::OnRegSoft()
 void CMFC_DetectionView::OnUpdateRegSoft(CCmdUI *pCmdUI)
 {
 	pCmdUI->Enable(!PassLicense());
+}
+
+
+
+void CMFC_DetectionView::ForNextNumberInput()
+{
+	SetThisWindowForground();
+	GetDlgItem(IDC_EDIT_NUMBER)->EnableWindow(TRUE);
+	GetDlgItem(IDC_EDIT_NUMBER)->SetFocus();
+	m_BarCodeEdit.SetSel(0,-1);
+}
+
+void CMFC_DetectionView::SetThisWindowForground()
+{
+	HWND hForeWnd = NULL; 
+	HWND hWnd= this->m_hWnd;
+	DWORD dwForeID; 
+	DWORD dwCurID; 
+
+	hForeWnd =  ::GetForegroundWindow(); 
+	dwCurID =  ::GetCurrentThreadId(); 
+	dwForeID =  ::GetWindowThreadProcessId( hForeWnd, NULL ); 
+	::AttachThreadInput( dwCurID, dwForeID, TRUE); 
+	::ShowWindow( hWnd, SW_SHOWNORMAL ); 
+	::SetWindowPos( hWnd, HWND_TOPMOST, 0,0,0,0, SWP_NOSIZE|SWP_NOMOVE ); 
+	::SetWindowPos( hWnd, HWND_NOTOPMOST, 0,0,0,0, SWP_NOSIZE|SWP_NOMOVE ); 
+	::SetForegroundWindow( hWnd ); 
+	::AttachThreadInput( dwCurID, dwForeID, FALSE);
+}
+
+
+void CMFC_DetectionView::OnSetFocus(CWnd* pOldWnd)
+{
+	CFormView::OnSetFocus(pOldWnd);
+	GetDlgItem(IDC_EDIT_NUMBER)->SetFocus();	
+}
+
+
+
+
+
+CString FormatTimeNomal(time_t t)
+{
+	CString str;
+	struct tm local;  
+	time_t temp = t;
+	localtime_s(&local,&temp);   
+	str.Format("%4d-%02d-%02d %02d:%02d:%02d",local.tm_year+1900,local.tm_mon+1,local.tm_mday,local.tm_hour,local.tm_min,local.tm_sec);
+	return str;
+}
+
+
+CString FormatTimeOnlyNumber(time_t t)
+{
+	CString str;
+	time_t temp = t;
+	struct tm local;;    
+	localtime_s(&local,&temp);
+	str.Format("%4d%02d%02d%02d%02d%02d",local.tm_year+1900,local.tm_mon+1,local.tm_mday,local.tm_hour,local.tm_min,local.tm_sec);
+	return str;
+}
+
+string BuildFileName(const string& strBarCode, const string& extention)
+{
+	string str;
+	str = strBarCode + '_' + FormatTimeOnlyNumber(time(NULL)).GetString() + '.' + extention;
+	return str;
+}
+
+
+
+void CMFC_DetectionView::WriteReport(DetectionResult& dr)
+{
+	int unitID(0),itemID(0);
+
+	string filepath = string("D:\\TestData\\") + BuildFileName(m_strBarCode.GetString(),"dat");
+	ofstream dataFile(filepath.c_str());
+
+	dataFile << "ObjectID=" << m_strBarCode.GetString() << "\r\n";
+	dataFile << "StartTime=" << FormatTimeNomal(m_startTimer).GetString() << "\r\n";
+
+	dataFile << "No.   Test  Item Low Limit  Criterion  High Limit Unit   P/F Remark Value1 Time(ms)\r\n";
+	BOOST_FOREACH(ReportLine_Ptr& l, dr.Report)
+	{
+		if(auto unit = std::dynamic_pointer_cast<ReportUnit>(l))
+		{
+			unitID++;
+			itemID = 0;
+		}
+		else if(auto item = std::dynamic_pointer_cast<ReportItem>(l))
+		{
+			dataFile << unitID << '.' << ++itemID << "\t" << item->GetReportString() << "\r\n";
+		}
+	}
+	dataFile << "EndTime=" << FormatTimeNomal(m_stopTimer).GetString() << "\r\n";
+
+	dataFile.close();
+
+	filepath = string("D:\\TestFlag\\") + BuildFileName(m_strBarCode.GetString(),"flg");
+	ofstream flagFile(filepath.c_str());
+	if(dr.IsPass)
+		flagFile << 1;
+	else
+		flagFile << 0;
+	flagFile.close();
 }

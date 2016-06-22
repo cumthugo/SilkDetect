@@ -147,6 +147,8 @@ BEGIN
     CONTROL         "",IDC_STATE_PIC,"Static",SS_BITMAP,346,98,13,12
     PUSHBUTTON      "保存图片",IDC_GET_PIC2,333,54,50,14
     PUSHBUTTON      "摄像头捕获",IDC_GET_PIC3,334,76,50,14
+    LTEXT           "条码：",IDC_TXT_NUMBER,331,15,22,8
+    EDITTEXT        IDC_EDIT_NUMBER,355,14,93,12,ES_AUTOHSCROLL
 END
 
 IDD_DLG_PROGRAM_SELECT DIALOGEX 0, 0, 215, 98
@@ -664,8 +666,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2,1,12,0
- PRODUCTVERSION 2,1,12,0
+ FILEVERSION 2,2,0,0
+ PRODUCTVERSION 2,2,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -682,12 +684,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "中国矿业大学"
             VALUE "FileDescription", "排线检测软件"
-            VALUE "FileVersion", "2.1.12.0"
+            VALUE "FileVersion", "2.2.0.0"
             VALUE "InternalName", "MFC_Detection.exe"
             VALUE "LegalCopyright", "CUMT(C) 中国矿业大学。保留所有权利。"
             VALUE "OriginalFilename", "MFC_Detection.exe"
             VALUE "ProductName", "排线检测软件"
-            VALUE "ProductVersion", "2.1.12.0"
+            VALUE "ProductVersion", "2.2.0.0"
         END
     END
     BLOCK "VarFileInfo"

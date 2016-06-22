@@ -9,6 +9,7 @@
 #include "afxwin.h"
 
 
+struct DetectionResult;
 class CMFC_DetectionView : public CFormView
 {
 protected: // 仅从序列化创建
@@ -45,10 +46,6 @@ protected:
 	DetectionLine m_SecondStepLine;
 	shared_ptr<DetectionProgram> m_FirstProgram;
 	shared_ptr<DetectionProgram> m_SecondProgram;
-
-	//add in 2015/4/30 for param of save sample images
-	string itsScreenShotPath;
-	int itsMaxImagesPerFolder;
 
 // 实现
 public:
@@ -87,6 +84,16 @@ public:
 	afx_msg void OnMenuEditPassword();
 	afx_msg void OnRegSoft();
 	afx_msg void OnUpdateRegSoft(CCmdUI *pCmdUI);
+//新增条码接口
+public:
+	void ForNextNumberInput();
+	void SetThisWindowForground();
+	void WriteReport(DetectionResult& dr);
+	afx_msg void OnSetFocus(CWnd* pOldWnd);
+	CEdit m_BarCodeEdit;
+	CString m_strBarCode;
+	time_t m_startTimer;
+	time_t m_stopTimer;
 };
 
 #ifndef _DEBUG  // MFC_DetectionView.cpp 中的调试版本

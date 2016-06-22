@@ -4,16 +4,6 @@
 
 void DetectionProgram::Detect( IplImage_Ptr sourceImage,DetectionResult& result )
 {
-	//如果设置是空，则每次都不通过 -- 2014/11/20
-	if (this->size() == 0)
-	{
-		result.IsPass = false;
-		result.ErrorString = ResultFactory::GetInstance()->GetPedestalErrorString();
-		result.ResultImage = cvCloneImage(sourceImage);
-		return;
-	}
-
-
 	result.IsPass = true;
 	result.ErrorString = ResultFactory::GetInstance()->GetPassString();
 	result.ResultImage = cvCloneImage(sourceImage);
@@ -32,8 +22,12 @@ void DetectionProgram::Detect( IplImage_Ptr sourceImage,DetectionResult& result 
 		
 		DetectionResult dr;
 		da->Detect(subImage,dr);
+		
 
-		itsScreenShot.Save(da->Name,subImage,da); //add in 2015/4/28
+		//report
+		result.Report.push_back(make_shared<ReportUnit>());
+		copy(dr.Report.begin(),dr.Report.end(),back_inserter(result.Report));
+
 
 		if(!dr.IsPass)
 		{

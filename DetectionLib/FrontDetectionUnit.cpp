@@ -4,12 +4,19 @@
 
 void FrontDetectionUnit::DetectAlgorithm(const IplImage_Ptr sourceImage ,const CvRect& PedestalRect,DetectionResult& result)
 {
+	Clock_MS cl;
+	cl.Start();
 	Silk.DetectFlag = ObjectDetectAlgorithm::DETECT_FLAG_APPEAR;
 	Silk.Detect(sourceImage,PedestalRect,PedestalPosition,result);
+	cl.Stop();
+	result.AddItemReport(this->Name,"Ë¿Ó¡",result.IsPass,cl.GetTime());
+	
 	if(!result.IsPass) return;
-
+	cl.Start();
 	Lock.DetectFlag = ObjectDetectAlgorithm::DETECT_FLAG_DISAPPEAR;
 	Lock.Detect(sourceImage,PedestalRect,PedestalPosition,result);
+	cl.Stop();
+	result.AddItemReport(this->Name,"Ëø¿Û",result.IsPass,cl.GetTime());
 }
 
 ptree FrontDetectionUnit::GetTree() const

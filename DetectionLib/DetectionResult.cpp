@@ -1,5 +1,5 @@
 #include "DetectionResult.hpp"
-
+#include <boost/lexical_cast.hpp>
 
 class EnglishResultFactory : public ResultFactory
 {
@@ -24,4 +24,28 @@ public:
 shared_ptr<ResultFactory> ResultFactory::GetInstance()
 {
 	return shared_ptr<ResultFactory>(new ChineseResultFactory);
+}
+
+
+
+string ReportItem::GetReportString() const
+{
+	string passStr = Pass ? "P" : "F";
+	return string(Unit + "_" + Name + "\tBOOL\t" + passStr + "\t1\t" + boost::lexical_cast<string>(Time));
+}
+
+void DetectionResult::AddItemReport( const string& unit, const string& name, bool pass, long time )
+{
+	shared_ptr<ReportItem> report = make_shared<ReportItem>();
+	report->Unit = unit;
+	report->Name = name;
+	report->Pass = pass;
+	report->Time = time;
+	Report.push_back(report);
+}
+
+void DetectionResult::AddUnitReport()
+{
+	shared_ptr<ReportUnit> report = make_shared<ReportUnit>();
+	Report.push_back(report);
 }

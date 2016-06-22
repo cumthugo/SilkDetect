@@ -3,7 +3,8 @@
 
 void DetectionUnit::Detect(IplImage_Ptr sourceImage,DetectionResult& result)
 {
-	
+	Clock_MS cl;
+	cl.Start();
 	result.ErrorString = ResultFactory::GetInstance()->GetPassString();
 	result.IsPass = false;	
 	assert(PedestalFinder);
@@ -14,8 +15,18 @@ void DetectionUnit::Detect(IplImage_Ptr sourceImage,DetectionResult& result)
 		PedestalFinder->ProcessInclined(sourceImage);
 
 	result.ResultImage = cvCloneImage(sourceImage);
+	cl.Stop();
+
+	//上面过程为预处理，可以将至输出到报告中	
+	result.AddItemReport(this->Name,"预处理",true,cl.GetTime());
+
+	cl.Start();
 	CvRect FindPedestalRect = PedestalFinder->Find(sourceImage);
-	if(FindPedestalRect.width == 0)
+	bool IsFindPedestal = (FindPedestalRect.width != 0);	
+	cl.Stop();
+	result.AddItemReport(this->Name,"插座",IsFindPedestal,cl.GetTime());
+
+	if(!IsFindPedestal)
 	{	
 		result.ErrorString = ResultFactory::GetInstance()->GetPedestalErrorString();
 		cvAddS(result.ResultImage,CV_RGB(100,0,0),result.ResultImage);
@@ -23,6 +34,7 @@ void DetectionUnit::Detect(IplImage_Ptr sourceImage,DetectionResult& result)
 			result.ResultImage = Rotate90CounterClockwise(result.ResultImage);
 		return;
 	}
+
 	FillRect(result.ResultImage,FindPedestalRect,CV_RGB(100,100,0));
 	DetectAlgorithm(sourceImage,FindPedestalRect,result);
 
