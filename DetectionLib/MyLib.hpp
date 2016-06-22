@@ -75,6 +75,7 @@ ostream& operator<<(ostream& o,const CvScalar& rhs);
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
+#include <boost/property_tree/ini_parser.hpp>
 using boost::property_tree::ptree;
 using boost::property_tree::wptree;
 

@@ -1,0 +1,38 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DetectionLib", "DetectionLib\DetectionLib.vcxproj", "{A121C268-47AE-47BC-A881-9BD8EE7E03E3}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DetectionAlgorithm", "DetectionAlgorithm\DetectionAlgorithm.vcxproj", "{53B00E8D-F1BD-4B25-A7B9-7C8AACD8D93B}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestDetection", "TestDetection\TestDetection.vcxproj", "{01B13704-A6CC-4713-8756-396BC0FDC541}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "排线检测软件", "MFC_Detection\MFC_Detection.vcxproj", "{D35DF967-4DCD-4C3B-BD3F-CD9EAA274F47}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A121C268-47AE-47BC-A881-9BD8EE7E03E3}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A121C268-47AE-47BC-A881-9BD8EE7E03E3}.Debug|Win32.Build.0 = Debug|Win32
+		{A121C268-47AE-47BC-A881-9BD8EE7E03E3}.Release|Win32.ActiveCfg = Release|Win32
+		{A121C268-47AE-47BC-A881-9BD8EE7E03E3}.Release|Win32.Build.0 = Release|Win32
+		{53B00E8D-F1BD-4B25-A7B9-7C8AACD8D93B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{53B00E8D-F1BD-4B25-A7B9-7C8AACD8D93B}.Debug|Win32.Build.0 = Debug|Win32
+		{53B00E8D-F1BD-4B25-A7B9-7C8AACD8D93B}.Release|Win32.ActiveCfg = Release|Win32
+		{53B00E8D-F1BD-4B25-A7B9-7C8AACD8D93B}.Release|Win32.Build.0 = Release|Win32
+		{01B13704-A6CC-4713-8756-396BC0FDC541}.Debug|Win32.ActiveCfg = Debug|Win32
+		{01B13704-A6CC-4713-8756-396BC0FDC541}.Debug|Win32.Build.0 = Debug|Win32
+		{01B13704-A6CC-4713-8756-396BC0FDC541}.Release|Win32.ActiveCfg = Release|Win32
+		{01B13704-A6CC-4713-8756-396BC0FDC541}.Release|Win32.Build.0 = Release|Win32
+		{D35DF967-4DCD-4C3B-BD3F-CD9EAA274F47}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D35DF967-4DCD-4C3B-BD3F-CD9EAA274F47}.Debug|Win32.Build.0 = Debug|Win32
+		{D35DF967-4DCD-4C3B-BD3F-CD9EAA274F47}.Release|Win32.ActiveCfg = Release|Win32
+		{D35DF967-4DCD-4C3B-BD3F-CD9EAA274F47}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
