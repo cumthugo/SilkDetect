@@ -2,43 +2,89 @@
 
 #include "DetectionUnitFactory.hpp"
 
-void DetectionProgram::Detect( IplImage_Ptr sourceImage,DetectionResult& result )
+
+//This function is used for check iterator is valid		--added in 2014/07/22
+template <typename T>
+bool IsIteartorInList(std::list<T>& l, typename std::list<T>::iterator it)
 {
-	result.IsPass = true;
-	result.ErrorString = ResultFactory::GetInstance()->GetPassString();
-	result.ResultImage = cvCloneImage(sourceImage);
-
-	//遍历每个检测算法，先截取子图，在运行独自的检测算法，最后如果检测有错误，就把错误信息拷贝过去。
-	foreach(shared_ptr<DetectionUnit> da,*this)
+	for (std::list<T>::iterator iter = l.begin(); iter!=l.end(); ++iter)
 	{
-		CvRect ROIImageRect = da->SubImageRect.width == 0 ? cvRect(0,0,sourceImage->width,sourceImage->height) : da->SubImageRect;//未设置，就给它设置成全部	
-		RestrictRect(ROIImageRect,cvRect(0,0,sourceImage->width,sourceImage->height));					//因为需要修正Rect，因此需要拷贝一份	
-		
+		if(it == iter) return true;
+	}
+	return false;
+}
 
-		IplImage_Ptr subImage = cvCreateImage(cvSize(ROIImageRect.width,ROIImageRect.height),sourceImage->depth,sourceImage->nChannels);
-		cvSetImageROI(sourceImage,ROIImageRect);
-		cvCopy(sourceImage,subImage);
-		cvResetImageROI(sourceImage);
-		
-		DetectionResult dr;
-		da->Detect(subImage,dr);
-		
+//The logic is tested by DetectLogic.	--added in 2014/07/22
+//重构 2014/07/22
 
-		//report
-		result.Report.push_back(make_shared<ReportUnit>());
-		copy(dr.Report.begin(),dr.Report.end(),back_inserter(result.Report));
+void DetectionProgram::Detect( IplImage_Ptr sourceImage,DetectionResult& result )
+{	
+	//如果设置是空，则每次都不通过 -- 2014/11/20
+	result.ResultImage = cvCloneImage(sourceImage);
+	if (this->size() == 0)
+	{
+		result.ErrorCode = RESULT_FAIL_PEDESTAL;
+		return;
+	}
+	
+	result.ErrorCode = RESULT_PASS;	
 
+	if(!IsIteartorInList(*this,lock_iter))	UnLock(); // if not exist any more, reset detect. --added in 2014/07/22
 
-		if(!dr.IsPass)
-		{
-			result.IsPass = dr.IsPass;
-			result.ErrorString = dr.ErrorString;
-			
-			cvSetImageROI(result.ResultImage,ROIImageRect);
-			cvCopy(dr.ResultImage,result.ResultImage);
-			cvResetImageROI(result.ResultImage);
-			return;
+	if(!IsLock()) //normal detect	--added in 2014/07/22
+	{
+		//遍历每个检测算法，先截取子图，在运行独自的检测算法，最后如果检测有错误，就把错误信息拷贝过去。		
+		for(auto it = this->begin(); it != this->end(); ++it)
+		{			
+			IplImage_Ptr subImage = GetSubImage(sourceImage,it);
+			DetectionResult dr;
+			(*it)->Detect(subImage,dr);
+
+			//report
+			result.AddUnitReport();
+			copy(dr.Report.begin(),dr.Report.end(),back_inserter(result.Report));
+
+			// lock silk error
+			if(dr.ErrorCode == RESULT_FAIL_SILK) Lock(it);
+
+			if(!dr.IsPass())
+			{				
+				result.ErrorCode = dr.ErrorCode;
+				CopyResult2Source(result.ResultImage,it,dr.ResultImage);
+				break;
+			}
 		}
+	}
+	else		//The logic is tested by DetectLogic.	--added in 2014/07/22
+	{
+		IplImage_Ptr subImage = GetSubImage(sourceImage,lock_iter);
+		DetectionResult dr;
+		Clock_MS cl;
+		cl.Start();
+		(*lock_iter)->Detect(subImage,dr);
+		cl.Stop();
+
+		result.AddUnitReport();
+		if(dr.ErrorCode == RESULT_FAIL_CABLE)		// only cable error could unlock silk error
+		{
+			//report as normal			
+			copy(dr.Report.begin(),dr.Report.end(),back_inserter(result.Report));		
+		
+			result.ErrorCode = dr.ErrorCode;
+			CopyResult2Source(result.ResultImage,lock_iter,dr.ResultImage);			
+
+			//unlock at the end of this function, or CopyResult2Source will be error.
+			UnLock();
+		}
+		else		// set silk error
+		{
+			//report as silk error			
+			result.AddItemReport((*lock_iter)->Name,"Silk",false,cl.GetTime());
+			
+			result.ErrorCode = RESULT_FAIL_SILK;
+			cvAddS(subImage,CV_RGB(100,0,0),subImage);
+			CopyResult2Source(result.ResultImage,lock_iter,subImage);		
+		}		
 	}
 }
 
@@ -85,6 +131,37 @@ void DetectionProgram::CopyOf( const DetectionProgram& dp )
 	{
 		push_back(du->Clone());
 	}
+}
+
+IplImage_Ptr DetectionProgram::GetSubImage( IplImage_Ptr sourceImage, iterator& it )
+{
+	if(!IsIteartorInList(*this,it)) return IplImage_Ptr();
+	shared_ptr<DetectionUnit> da = *it;
+	CvRect ROIImageRect = GetROIRect(sourceImage,it);
+
+	IplImage_Ptr subImage = cvCreateImage(cvSize(ROIImageRect.width,ROIImageRect.height),sourceImage->depth,sourceImage->nChannels);
+	cvSetImageROI(sourceImage,ROIImageRect);
+	cvCopy(sourceImage,subImage);
+	cvResetImageROI(sourceImage);
+
+	return subImage;
+}
+
+CvRect DetectionProgram::GetROIRect( IplImage_Ptr sourceImage, iterator& it )
+{
+	if(!IsIteartorInList(*this,it)) return cvRect(0,0,0,0);
+	shared_ptr<DetectionUnit> da = *it;
+	CvRect ROIImageRect = da->SubImageRect.width == 0 ? cvRect(0,0,sourceImage->width,sourceImage->height) : da->SubImageRect;//未设置，就给它设置成全部	
+	RestrictRect(ROIImageRect,cvRect(0,0,sourceImage->width,sourceImage->height));					//因为需要修正Rect，因此需要拷贝一份	
+	return ROIImageRect;
+}
+
+void DetectionProgram::CopyResult2Source( IplImage_Ptr sourceResultImage, iterator it, IplImage_Ptr resultImage )
+{
+	CvRect ROIImageRect = GetROIRect(sourceResultImage,it);
+	cvSetImageROI(sourceResultImage,ROIImageRect);	
+	cvCopy(resultImage,sourceResultImage);
+	cvResetImageROI(sourceResultImage);
 }
 
 bool operator==( const DetectionProgram& lhs, const DetectionProgram& rhs )

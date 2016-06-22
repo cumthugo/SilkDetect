@@ -242,35 +242,31 @@ bool CMFC_DetectionView::Detect( IplImage_Ptr img ,shared_ptr<DetectionProgram> 
 				{
 					dp->Detect(img,dr);
 				}
-				catch(const cv::Exception& e)
-				{
-					dr.IsPass = false;
-					dr.ErrorString = e.err;
+				catch(const cv::Exception&)
+				{				
+					dr.ErrorCode = RESULT_FAIL_UNKNOWN;
 				}
 				m_stopTimer = std::time(NULL);
 				//输出report
 				WriteReport(dr);
 			}
 			else
-			{
-				dr.IsPass = false;
-				dr.ErrorString = "获取图片错误！请检查摄像头的连接！";
+			{			
+				dr.ErrorCode = RESULT_FAIL_CAMERA;
 			}
 		}
 		else
-		{
-			dr.IsPass = false;
-			dr.ErrorString = "请扫条码！";
+		{		
+			dr.ErrorCode = RESULT_FAIL_BAR_CODE;
 		}
 		ForNextNumberInput();
 	}
 	else
-	{
-		dr.IsPass = false;
-		dr.ErrorString = "无法使用检测程序，软件未注册！";
+	{	
+		dr.ErrorCode = RESULT_FAIL_AUTH;
 	}
 	ShowResult(dr);
-	return dr.IsPass;
+	return dr.IsPass();
 }
 
 
@@ -279,10 +275,6 @@ shared_ptr<DetectionProgram> CMFC_DetectionView::GetDetectionProgram()
 
 	return m_FirstProgram;
 }
-
-
-
-
 
 void CMFC_DetectionView::OnBnClickedGetPic3()
 {
@@ -295,10 +287,11 @@ void CMFC_DetectionView::OnBnClickedGetPic3()
 
 void CMFC_DetectionView::ShowResult(DetectionResult& dr)
 {
-	itsResultImage.CopyOf(dr.ResultImage);
-	m_ErrorString = dr.ErrorString.c_str();
+	itsResultImage.CopyOf(dr.ResultImage);	
+	m_ErrorString = ResultFactory::GetInstance()->GetErrorStringByErrorCode(dr.ErrorCode).c_str();
+	//need udpate
 	m_Brush.DeleteObject();
-	if(dr.IsPass)
+	if(dr.IsPass())
 		m_Brush.CreateSolidBrush(RGB(0,255,0));
 	else
 		m_Brush.CreateSolidBrush(RGB(255,0,0));
@@ -349,27 +342,24 @@ void CMFC_DetectionView::OnPaint()
 	GetDlgItem(IDC_STATE_PIC)->GetDC()->FillRgn(&DrawRgn,&m_Brush);
 }
 
-
-
-
-
-
-
 void CMFC_DetectionView::OnMenuSelectProgram()
 {
-	//CProgramSelectDialog dlg(DIALOG_SELECT);
-	//dlg.DoModal();
-	CSelectProgramDialog dlg;
-	dlg.m_FirstStepLine = &m_FirstStepLine;
-	dlg.m_SecondStepLine = &m_SecondStepLine;
-	dlg.m_FirstProgram = m_FirstProgram;
-	dlg.m_SecondProgram = m_SecondProgram;
-	if(dlg.DoModal() == IDOK)
+	//add 2014.10.29
+	if(PassPassword())
 	{
-		m_FirstProgram = dlg.m_FirstProgram;
-		m_SecondProgram = dlg.m_SecondProgram;
-		::WritePrivateProfileString("Program","FirstProgramName",m_FirstProgram->Name.c_str(),".\\Config.ini");
-		::WritePrivateProfileString("Program","SecondProgramName",m_SecondProgram->Name.c_str(),".\\Config.ini");
+
+		CSelectProgramDialog dlg;
+		dlg.m_FirstStepLine = &m_FirstStepLine;
+		dlg.m_SecondStepLine = &m_SecondStepLine;
+		dlg.m_FirstProgram = m_FirstProgram;
+		dlg.m_SecondProgram = m_SecondProgram;
+		if(dlg.DoModal() == IDOK)
+		{
+			m_FirstProgram = dlg.m_FirstProgram;
+			m_SecondProgram = dlg.m_SecondProgram;
+			::WritePrivateProfileString("Program","FirstProgramName",m_FirstProgram->Name.c_str(),".\\Config.ini");
+			::WritePrivateProfileString("Program","SecondProgramName",m_SecondProgram->Name.c_str(),".\\Config.ini");
+		}
 	}
 }
 
@@ -612,7 +602,7 @@ void CMFC_DetectionView::WriteReport(DetectionResult& dr)
 
 	filepath = string("D:\\TestFlag\\") + BuildFileName(m_strBarCode.GetString(),"flg");
 	ofstream flagFile(filepath.c_str());
-	if(dr.IsPass)
+	if(dr.IsPass())
 		flagFile << 1;
 	else
 		flagFile << 0;

@@ -9,13 +9,13 @@ void BackDetectionUnit::DetectAlgorithm( const IplImage_Ptr sourceImage,const Cv
 	BlueBox.DetectFlag = ObjectDetectAlgorithm::DETECT_FLAG_DISAPPEAR;
 	BlueBox.Detect(sourceImage,PedestalRect,PedestalPosition,result);
 	cl.Stop();
-	result.AddItemReport(this->Name,"Silk",result.IsPass,cl.GetTime());
-	if(!result.IsPass) return;
+	result.AddItemReport(this->Name,"Silk",result.IsPass(),cl.GetTime());
+	if(!result.IsPass()) return;
 	cl.Start();
 	Lock.DetectFlag = ObjectDetectAlgorithm::DETECT_FLAG_DISAPPEAR;
 	Lock.Detect(sourceImage,PedestalRect,PedestalPosition,result);
 	cl.Stop();
-	result.AddItemReport(this->Name,"Lock",result.IsPass,cl.GetTime());
+	result.AddItemReport(this->Name,"Lock",result.IsPass(),cl.GetTime());
 }
 
 ptree BackDetectionUnit::GetTree() const

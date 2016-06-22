@@ -17,6 +17,13 @@ protected:
 	bool isObjectInRect(const IplImage_Ptr sourceImage, const CvRect& detectRect, const Range<CvScalar>& colorRange,int objectWidth, int scanDirection = SCAN_FROM_BOTTOM, int detectFlag = DETECT_FLAG_APPEAR);
 };
 
+// added in 2014/7/27
+class CableDetectAlgorithm : public ObjectDetectAlgorithm
+{
+public:
+	virtual void Detect(const IplImage_Ptr sourceImage,const CvRect& PedestalRect,int PedestalPosition, DetectionResult& result ) = 0;
+};
+
 
 class SilkDetectAlgorithm : public ObjectDetectAlgorithm
 {
@@ -29,6 +36,30 @@ class LockDetectAlgorithm : public ObjectDetectAlgorithm
 public:
 	virtual void Detect(const IplImage_Ptr sourceImage,const CvRect& PedestalRect,int PedestalPosition,DetectionResult& result ) = 0;
 };
+
+
+// added in 2014/7/27
+class CommonCableDetectAlgorithm : public CableDetectAlgorithm
+{
+public:
+	CommonCableDetectAlgorithm():ColorRange(Range<CvScalar>(CV_RGB(0,0,0),CV_RGB(255,255,255))),
+		SearchRange(Range<int>(0,0)),PixelCount(0),XOffset(0),SearchWidth(0){}
+	void Detect(const IplImage_Ptr sourceImage,const CvRect& PedestalRect,int PedestalPosition,DetectionResult& result );
+	//–Ú¡–ªØ
+public:
+	virtual ptree GetTree() const;
+	virtual void ReadFromTree(const wptree& wpt);
+public:
+	//properties
+	Range<CvScalar> ColorRange;
+	Range<int> SearchRange;
+	int PixelCount;
+	int XOffset;
+	int SearchWidth;
+};
+bool operator==(const CommonCableDetectAlgorithm& lhs, const CommonCableDetectAlgorithm& rhs);
+bool operator!=(const CommonCableDetectAlgorithm& lhs, const CommonCableDetectAlgorithm& rhs);
+ostream& operator<<(ostream& o, const CommonCableDetectAlgorithm& rhs);
 
 
 class CommonSilkDetectAlgorithm : public SilkDetectAlgorithm
