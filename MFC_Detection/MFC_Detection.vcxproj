@@ -119,6 +119,7 @@
     <ClCompile Include="FrontUnitDialog.cpp" />
     <ClCompile Include="HardLockDetectionDialog.cpp" />
     <ClCompile Include="MainFrm.cpp" />
+    <ClCompile Include="ManualPassDialog.cpp" />
     <ClCompile Include="MFC_Detection.cpp" />
     <ClCompile Include="MFC_DetectionDoc.cpp" />
     <ClCompile Include="MFC_DetectionView.cpp" />
@@ -142,6 +143,7 @@
     <ClInclude Include="FrontUnitDialog.h" />
     <ClInclude Include="HardLockDetectionDialog.h" />
     <ClInclude Include="MainFrm.h" />
+    <ClInclude Include="ManualPassDialog.h" />
     <ClInclude Include="MFC_Detection.h" />
     <ClInclude Include="MFC_DetectionDoc.h" />
     <ClInclude Include="MFC_DetectionView.h" />
@@ -155,10 +157,12 @@
     <ClInclude Include="WorkIdDialog.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="res\icon1.ico" />
     <None Include="res\MFC_Detection.ico" />
     <None Include="res\MFC_Detection.rc2" />
     <None Include="res\MFC_DetectionDoc.ico" />
     <None Include="ReadMe.txt" />
+    <None Include="res\question.ico" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="MFC_Detection.rc" />

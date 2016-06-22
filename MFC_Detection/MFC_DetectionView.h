@@ -10,6 +10,7 @@
 
 #include "afxwin.h"
 
+#include "ManualPassDialog.h"
 
 
 class CMFC_DetectionView : public CFormView
@@ -71,7 +72,7 @@ public:
 
 	afx_msg LRESULT OnCommProc(WPARAM wParam, LPARAM lParam);
 
-	void ManualJudge( DetectionResult &dr );
+	void StartManualJudge();
 
 	CString m_ErrorString;
 	afx_msg void OnSize(UINT nType, int cx, int cy);
@@ -105,9 +106,16 @@ public:
 	time_t m_stopTimer;
 //new report function
 	bool HasSecondStep();
-	//add in 2015/10/13 for save first step report
-	ReportLineList itsFirstSteprReport;
-	bool itsFirstResult;
+//add in 2015/10/13 for save first step report
+//人工检查对话框
+	DetectionResult itsFirstDetectResult;
+	DetectionResult itsSecondDetectResult;
+	int itsCurrentCheckStep;
+	Clock_MS itsManualTimer;
+	bool itsInManualConfirming;
+
+	CManualPassDialog m_ManualPassDlg;
+	afx_msg LRESULT OnManualPassProc(WPARAM wParam, LPARAM lParam);
 };
 
 #ifndef _DEBUG  // MFC_DetectionView.cpp 中的调试版本

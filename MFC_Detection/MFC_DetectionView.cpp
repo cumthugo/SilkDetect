@@ -15,7 +15,6 @@
 #include "SelectProgramDialog.h"
 #include "Comm.h"
 #include "RegLisenseDialog.h"
-#include "WorkIdDialog.h"
 
 #include "../DetectionLib/FrontDetectionUnit.hpp"
 #include "../DetectionLib/BackDetectionUnit.hpp"
@@ -58,6 +57,7 @@ BEGIN_MESSAGE_MAP(CMFC_DetectionView, CFormView)
 ON_WM_SIZE()
 ON_WM_PAINT()
 ON_MESSAGE(WM_COMM_EVENT,&CMFC_DetectionView::OnCommProc)
+ON_MESSAGE(WM_NOTIFY_MANUAL_PASS,&CMFC_DetectionView::OnManualPassProc)
 ON_BN_CLICKED(IDC_GET_PIC2, &CMFC_DetectionView::OnBnClickedGetPic2)
 ON_BN_CLICKED(IDC_GET_PIC3, &CMFC_DetectionView::OnBnClickedGetPic3)
 ON_COMMAND(ID_MENU_SELECT_PROGRAM, &CMFC_DetectionView::OnMenuSelectProgram)
@@ -82,6 +82,7 @@ CMFC_DetectionView::CMFC_DetectionView()
 	: CFormView(CMFC_DetectionView::IDD)
 	, m_ErrorString(_T(""))
 	, m_strBarCode(_T(""))
+	, itsCurrentCheckStep(0)
 {
 	// TODO: 在此处添加构造代码
 
@@ -117,6 +118,9 @@ void CMFC_DetectionView::OnInitialUpdate()
 
 	UpdateData(FALSE);
 
+	m_ManualPassDlg.Create(IDD_DLG_MANUAL_PASS,this);
+	m_ManualPassDlg.m_MsgWnd = m_hWnd;
+	
 	m_editFont.CreatePointFont(200,"宋体");
 	m_editError.SetFont(&m_editFont);
 
@@ -243,6 +247,7 @@ void CMFC_DetectionView::OnBnClickedGetPic2()
 DetectionResult CMFC_DetectionView::Detect( IplImage_Ptr img ,shared_ptr<DetectionProgram> dp )
 {
 	DetectionResult dr;
+	dr.NeedManualCheck = false;
 	UpdateData(TRUE);
 	if(PassLicense())
 	{
@@ -254,11 +259,14 @@ DetectionResult CMFC_DetectionView::Detect( IplImage_Ptr img ,shared_ptr<Detecti
 				{
 					dp->SetScreenShot(itsScreenShotPath+ "\\" +dp->Name,itsMaxImagesPerFolder); //add in 2015/4/28
 					dp->Detect(img,dr);
+					if(!dr.IsPass)
+						dr.NeedManualCheck = true;
 				}
 				catch(const cv::Exception& e)
 				{
 					dr.IsPass = false;
 					dr.ErrorString = e.err;
+					dr.NeedManualCheck = true;
 				}				
 			}
 			else
@@ -286,8 +294,12 @@ DetectionResult CMFC_DetectionView::Detect( IplImage_Ptr img ,shared_ptr<Detecti
 
 shared_ptr<DetectionProgram> CMFC_DetectionView::GetDetectionProgram()
 {	
-
-	return m_FirstProgram;
+	if(1 == itsCurrentCheckStep)
+		return m_FirstProgram;
+	else if(2 == itsCurrentCheckStep)
+		return m_SecondProgram;
+	else
+		return m_FirstProgram;
 }
 
 
@@ -457,51 +469,73 @@ void CMFC_DetectionView::OnUpdateMenuSelectProgram(CCmdUI *pCmdUI)
 
 LRESULT CMFC_DetectionView::OnCommProc( WPARAM wParam, LPARAM lParam )
 {
+		//process last result first
+		if (itsInManualConfirming)
+		{
+			m_ManualPassDlg.EndDialog(0);
+			itsInManualConfirming = false;
+			itsManualTimer.Stop();
+			//write report
+			if(1 == itsCurrentCheckStep)
+			{
+				itsFirstDetectResult.AddItemReport(GetDetectionProgram()->Name,"ManualCheckCancel",itsFirstDetectResult.IsPass,itsManualTimer.GetTime());
+				m_stopTimer = std::time(NULL);
+				WriteReport(itsFirstDetectResult);
+			}
+			else if(2 == itsCurrentCheckStep)
+			{
+				std::copy(itsFirstDetectResult.Report.rbegin(),itsFirstDetectResult.Report.rend(),front_inserter(itsSecondDetectResult.Report)); // insert first result
+				itsSecondDetectResult.IsPass = itsSecondDetectResult.IsPass & itsFirstDetectResult.IsPass;
+				m_stopTimer = std::time(NULL);
+				WriteReport(itsSecondDetectResult);
+			}
+		}
 		UCHAR cmd = (UCHAR)wParam;
 		shared_ptr<ImageSource> camera_source = ImageSourceFactory::GetImageFromCamera();
-		IplImage_Ptr img = camera_source->GetImage(); 		
+		IplImage_Ptr img = camera_source->GetImage();
 		if(cmd == 0xA0)
-		{						
+		{			
+			itsCurrentCheckStep = 1;
 			m_startTimer = std::time(NULL); //anyway, start time from here
 			DetectionResult dr = Detect(img,GetDetectionProgram());
 
-			if(!dr.IsPass)			
-				ManualJudge(dr);
+			//save values			
+			itsFirstDetectResult = dr;
 
-			if(dr.IsPass)
-				gCommObject.SendCommData(0x01);
-			else
-				gCommObject.SendCommData(0x02);
-			
-			itsFirstSteprReport = dr.Report;	
-			itsFirstResult = dr.IsPass;
-
-			if(!HasSecondStep() || !dr.IsPass)
+			if(dr.NeedManualCheck)			
+				StartManualJudge();
+			if(dr.IsPass) // if only one step and passed, done here
 			{
-				m_stopTimer = std::time(NULL);
-				//输出report, 
-				WriteReport(dr);
-			}
+				gCommObject.SendCommData(0x01); 
+				if(!HasSecondStep())
+				{
+					m_stopTimer = std::time(NULL);
+					//输出report, 
+					WriteReport(dr);
+				}
+			}			
 		}
 		else if(cmd == 0xA1)
-		{			
-			DetectionResult dr = Detect(img,m_SecondProgram);
-			if(!dr.IsPass)
-				ManualJudge(dr);
+		{
+			itsCurrentCheckStep = 2;
+			DetectionResult dr = Detect(img,GetDetectionProgram());			
+			//save values			
+			itsSecondDetectResult = dr;
 
-			if(dr.IsPass)
+			if(dr.NeedManualCheck)
+				StartManualJudge();
+			if(dr.IsPass) //pass, done here
+			{
 				gCommObject.SendCommData(0x01);
-			else			
-				gCommObject.SendCommData(0x02);
-			
-			//sure has second step,
-			std::copy(itsFirstSteprReport.rbegin(),itsFirstSteprReport.rend(),front_inserter(dr.Report)); // insert first result
-			dr.IsPass = dr.IsPass & itsFirstResult;
-			m_stopTimer = std::time(NULL);
-			//输出report,
-			WriteReport(dr);
-			itsFirstSteprReport.clear();
-			itsFirstResult = false;
+				//sure has second step,
+				std::copy(itsFirstDetectResult.Report.rbegin(),itsFirstDetectResult.Report.rend(),front_inserter(dr.Report)); // insert first result
+				dr.IsPass = dr.IsPass & itsFirstDetectResult.IsPass;
+				m_stopTimer = std::time(NULL);
+				//输出report,
+				WriteReport(dr);
+				itsFirstDetectResult.Report.clear();
+				itsFirstDetectResult.IsPass = false;
+			}			
 		}
 	return 0;
 }
@@ -661,34 +695,55 @@ bool CMFC_DetectionView::HasSecondStep()
 	return m_SecondProgram->Name != "";
 }
 
-void CMFC_DetectionView::ManualJudge( DetectionResult &dr )
-{
-	//增加人工判断流程
-	static CWorkIdDialog dlg;
-	Clock_MS cl;
-	cl.Start();
-	if(MessageBox("请人工检查是否安装正确！","人工确认",MB_YESNO | MB_ICONQUESTION ) == IDYES)
-	{
-		if(dlg.DoModal() == IDOK)
-		{
-			cl.Stop();
-			dr.IsPass = true;					
-			dr.AddItemReport(GetDetectionProgram()->Name,"ManualCheck",true,cl.GetTime());
-			dr.ErrorString = "人工检查通过！";
-			ShowResult(dr);
-		}
-		else
-		{
-			cl.Stop();									
-			dr.AddItemReport(GetDetectionProgram()->Name,"ManualCheckCancel",false,cl.GetTime());
-		}
-		
-	}
-	else
-	{
-		cl.Stop();									
-		dr.AddItemReport(GetDetectionProgram()->Name,"ManualCheck",false,cl.GetTime());
-	}
+void CMFC_DetectionView::StartManualJudge()
+{	
+	itsManualTimer.Start();
+	itsInManualConfirming = true;
+	m_ManualPassDlg.ShowWindow(SW_SHOWNORMAL);
 }
 
+LRESULT CMFC_DetectionView::OnManualPassProc( WPARAM wParam, LPARAM lParam )
+{
+	itsInManualConfirming = false;
+	if(MSG_PASS == wParam)
+		gCommObject.SendCommData(0x01);
+	else
+		gCommObject.SendCommData(0x02);
+	itsManualTimer.Stop();
 
+	if(1 == itsCurrentCheckStep)
+	{
+		itsFirstDetectResult.IsPass = bool(MSG_PASS == wParam);
+		itsFirstDetectResult.AddItemReport(GetDetectionProgram()->Name,"ManualCheck",itsFirstDetectResult.IsPass,itsManualTimer.GetTime());
+		if(itsFirstDetectResult.IsPass)
+		{
+			itsFirstDetectResult.ErrorString = "人工检查通过！";
+			ShowResult(itsFirstDetectResult);
+		}
+		if(!HasSecondStep()) //only one step, done here
+		{
+			m_stopTimer = std::time(NULL);
+			WriteReport(itsFirstDetectResult);
+		}
+	}
+	else if (2 == itsCurrentCheckStep)
+	{
+		itsSecondDetectResult.IsPass = bool(MSG_PASS == wParam);
+		itsSecondDetectResult.AddItemReport(GetDetectionProgram()->Name,"ManualCheck",itsSecondDetectResult.IsPass,itsManualTimer.GetTime());
+		if(itsSecondDetectResult.IsPass)
+		{
+			itsSecondDetectResult.ErrorString = "人工检查通过！";
+			ShowResult(itsSecondDetectResult);
+		}
+		//write report
+		std::copy(itsFirstDetectResult.Report.rbegin(),itsFirstDetectResult.Report.rend(),front_inserter(itsSecondDetectResult.Report)); // insert first result
+		itsSecondDetectResult.IsPass = itsSecondDetectResult.IsPass & itsFirstDetectResult.IsPass;
+		m_stopTimer = std::time(NULL);
+		//输出report,
+		WriteReport(itsSecondDetectResult);
+		itsFirstDetectResult.Report.clear();
+		itsFirstDetectResult.IsPass = false;
+	}
+	
+	return 0;
+}

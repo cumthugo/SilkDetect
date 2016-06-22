@@ -34,7 +34,7 @@ class Clock_MS
 {
 public:
 	Clock_MS():_1_complete(false),_2_complete(false){}
-	void Start(){ _begin = GetTickCount(); _1_complete = true; }
+	void Start(){ _begin = GetTickCount(); _1_complete = true;_2_complete = false; }
 	void Stop()
 	{
 		if(_1_complete)
@@ -66,6 +66,7 @@ struct DetectionResult
 {
 	ReportLineList Report;
 	bool IsPass;
+	bool NeedManualCheck;
 	string ErrorString;
 	IplImage_Ptr ResultImage;
 	void AddItemReport(const string& unit, const string& name, bool pass, long time);

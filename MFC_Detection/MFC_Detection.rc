@@ -69,6 +69,7 @@ END
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\MFC_Detection.ico"
 IDR_stTYPE              ICON                    "res\\MFC_DetectionDoc.ico"
+IDI_ICON1               ICON                    "res\\question.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -674,6 +675,17 @@ BEGIN
     LTEXT           "请输入班组长编号：",IDC_STATIC,25,17,73,8
 END
 
+IDD_DLG_MANUAL_PASS DIALOGEX 0, 0, 268, 73
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "人工检查"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    ICON            IDI_ICON1,IDC_STATIC,18,12,21,20
+    LTEXT           "请人工检查排线是否安装正确！",IDC_STATIC,54,18,144,12
+    PUSHBUTTON      "通过(&P)",IDC_BTN_PASS,56,45,66,18
+    PUSHBUTTON      "失败(&F)",IDC_BTN_FAIL,163,45,66,18
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -681,8 +693,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2,3,3,4
- PRODUCTVERSION 2,3,3,4
+ FILEVERSION 2,3,3,5
+ PRODUCTVERSION 2,3,3,5
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -699,12 +711,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "中国矿业大学"
             VALUE "FileDescription", "排线检测软件"
-            VALUE "FileVersion", "2.3.3.4"
+            VALUE "FileVersion", "2.3.3.5"
             VALUE "InternalName", "MFC_Detection.exe"
             VALUE "LegalCopyright", "CUMT(C) 中国矿业大学。保留所有权利。"
             VALUE "OriginalFilename", "MFC_Detection.exe"
             VALUE "ProductName", "排线检测软件"
-            VALUE "ProductVersion", "2.3.3.4"
+            VALUE "ProductVersion", "2.3.3.5"
         END
     END
     BLOCK "VarFileInfo"
@@ -824,6 +836,14 @@ BEGIN
         RIGHTMARGIN, 199
         TOPMARGIN, 7
         BOTTOMMARGIN, 53
+    END
+
+    IDD_DLG_MANUAL_PASS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 261
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 66
     END
 END
 #endif    // APSTUDIO_INVOKED

@@ -22,6 +22,8 @@
 #define IDD_REG_PASSWORD_DIALOG         319
 #define IDD_DIALOG2                     332
 #define IDD_DLG_WORK_ID                 332
+#define IDD_DLG_MANUAL_PASS             333
+#define IDI_ICON1                       335
 #define IDC_GET_PIC                     1000
 #define IDC_GET_PIC2                    1001
 #define IDC_GET_PIC3                    1002
@@ -96,8 +98,10 @@
 #define IDC_BTN_ADD_BACK                1057
 #define IDC_EDIT_NUMBER                 1057
 #define IDC_BTN_ADD_NO_LOCK             1058
+#define IDC_BTN_PASS                    1058
 #define IDC_BUTTON6                     1059
 #define IDC_BTN_DEL                     1059
+#define IDC_BTN_FAIL                    1059
 #define ID_32771                        32771
 #define ID_32772                        32772
 #define ID_32773                        32773
@@ -120,9 +124,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        333
+#define _APS_NEXT_RESOURCE_VALUE        336
 #define _APS_NEXT_COMMAND_VALUE         32797
-#define _APS_NEXT_CONTROL_VALUE         1058
+#define _APS_NEXT_CONTROL_VALUE         1060
 #define _APS_NEXT_SYMED_VALUE           310
 #endif
 #endif

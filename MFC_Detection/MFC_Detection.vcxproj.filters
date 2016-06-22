@@ -66,6 +66,9 @@
     <ClCompile Include="WorkIdDialog.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="ManualPassDialog.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BackUnitDialog.h">
@@ -128,6 +131,9 @@
     <ClInclude Include="CSpreadSheet.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="ManualPassDialog.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\MFC_Detection.ico">
@@ -140,6 +146,12 @@
       <Filter>资源文件</Filter>
     </None>
     <None Include="ReadMe.txt" />
+    <None Include="res\icon1.ico">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\question.ico">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="MFC_Detection.rc">
