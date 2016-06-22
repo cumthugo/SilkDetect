@@ -4,6 +4,16 @@
 
 void DetectionProgram::Detect( IplImage_Ptr sourceImage,DetectionResult& result )
 {
+	//如果设置是空，则每次都不通过 -- 2014/11/20
+	if (this->size() == 0)
+	{
+		result.IsPass = false;
+		result.ErrorString = ResultFactory::GetInstance()->GetPedestalErrorString();
+		result.ResultImage = cvCloneImage(sourceImage);
+		return;
+	}
+
+
 	result.IsPass = true;
 	result.ErrorString = ResultFactory::GetInstance()->GetPassString();
 	result.ResultImage = cvCloneImage(sourceImage);

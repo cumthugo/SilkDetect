@@ -334,19 +334,21 @@ void CMFC_DetectionView::OnPaint()
 
 void CMFC_DetectionView::OnMenuSelectProgram()
 {
-	//CProgramSelectDialog dlg(DIALOG_SELECT);
-	//dlg.DoModal();
-	CSelectProgramDialog dlg;
-	dlg.m_FirstStepLine = &m_FirstStepLine;
-	dlg.m_SecondStepLine = &m_SecondStepLine;
-	dlg.m_FirstProgram = m_FirstProgram;
-	dlg.m_SecondProgram = m_SecondProgram;
-	if(dlg.DoModal() == IDOK)
+	//¼ÓÃÜ
+	if(PassPassword())
 	{
-		m_FirstProgram = dlg.m_FirstProgram;
-		m_SecondProgram = dlg.m_SecondProgram;
-		::WritePrivateProfileString("Program","FirstProgramName",m_FirstProgram->Name.c_str(),".\\Config.ini");
-		::WritePrivateProfileString("Program","SecondProgramName",m_SecondProgram->Name.c_str(),".\\Config.ini");
+		CSelectProgramDialog dlg;
+		dlg.m_FirstStepLine = &m_FirstStepLine;
+		dlg.m_SecondStepLine = &m_SecondStepLine;
+		dlg.m_FirstProgram = m_FirstProgram;
+		dlg.m_SecondProgram = m_SecondProgram;
+		if(dlg.DoModal() == IDOK)
+		{
+			m_FirstProgram = dlg.m_FirstProgram;
+			m_SecondProgram = dlg.m_SecondProgram;
+			::WritePrivateProfileString("Program","FirstProgramName",m_FirstProgram->Name.c_str(),".\\Config.ini");
+			::WritePrivateProfileString("Program","SecondProgramName",m_SecondProgram->Name.c_str(),".\\Config.ini");
+		}
 	}
 }
 
