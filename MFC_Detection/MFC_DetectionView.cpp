@@ -164,6 +164,19 @@ void CMFC_DetectionView::OnInitialUpdate()
 	{
 	}
 
+	//add in 2015/4/30
+	CString strScreenShotPath;
+	::GetPrivateProfileString("ScreenShot","Path","D:\\ScreenShot",strScreenShotPath.GetBuffer(255),255,".\\Config.ini");
+	strScreenShotPath.ReleaseBuffer();
+	strScreenShotPath.TrimRight("\\");
+	::WritePrivateProfileString("ScreenShot","Path",strScreenShotPath,".\\Config.ini");
+	itsScreenShotPath = strScreenShotPath.GetString();
+	itsMaxImagesPerFolder = ::GetPrivateProfileInt("ScreenShot","MaxImages",400,".\\Config.ini");
+	CString strMaxImage;
+	strMaxImage.Format("%d",itsMaxImagesPerFolder);
+	::WritePrivateProfileString("ScreenShot","MaxImages",strMaxImage,".\\Config.ini");
+
+
 	//∂¡»°≈‰÷√Œƒº˛
 	int comPort = ::GetPrivateProfileInt("COM","Port",1,".\\Config.ini");
 	CString StrPort;
@@ -240,6 +253,7 @@ bool CMFC_DetectionView::Detect( IplImage_Ptr img ,shared_ptr<DetectionProgram> 
 				m_startTimer = std::time(NULL);
 				try
 				{
+					dp->SetScreenShot(itsScreenShotPath+ "\\" +dp->Name,itsMaxImagesPerFolder); //add in 2015/4/28
 					dp->Detect(img,dr);
 				}
 				catch(const cv::Exception&)

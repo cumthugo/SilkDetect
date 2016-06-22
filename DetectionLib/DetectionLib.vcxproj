@@ -85,6 +85,7 @@
     <ClCompile Include="NoLockDetectionUnit.cpp" />
     <ClCompile Include="ObjectDetectAlgorithm.cpp" />
     <ClCompile Include="PedestalalFindAlgorithm.cpp" />
+    <ClCompile Include="ScreenShot.cpp" />
     <ClCompile Include="UC_3000.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -105,6 +106,7 @@
     <ClInclude Include="ObjectDetectAlgorithm.hpp" />
     <ClInclude Include="PedestalFindAlgorithm.hpp" />
     <ClInclude Include="Range.hpp" />
+    <ClInclude Include="ScreenShot.h" />
     <ClInclude Include="UC_3000.hpp" />
   </ItemGroup>
   <ItemGroup>

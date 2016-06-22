@@ -40,6 +40,8 @@ void DetectionProgram::Detect( IplImage_Ptr sourceImage,DetectionResult& result 
 			DetectionResult dr;
 			(*it)->Detect(subImage,dr);
 
+			itsScreenShot.Save((*it)->Name,subImage,*it); //add in 2015/4/28
+
 			//report
 			result.AddUnitReport();
 			copy(dr.Report.begin(),dr.Report.end(),back_inserter(result.Report));
