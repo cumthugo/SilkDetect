@@ -61,18 +61,6 @@ CBackUnitDialog::CBackUnitDialog(const shared_ptr<BackDetectionUnit>& bdu,CWnd* 
 	, m_BlueBoxSearchWidth(0)
 	, m_BlueBoxMaxGapAround(-1)
 	, m_ImagePreProcess(FALSE)
-	, m_CableColorMin_R(0)
-	, m_CableColorMin_G(0)
-	, m_CableColorMin_B(0)
-	, m_CableColorMax_R(0)
-	, m_CableColorMax_G(0)
-	, m_CableColorMax_B(0)
-	, m_CableSearchMin(0)
-	, m_CableSearchMax(0)
-	, m_IsCableColorHSV(FALSE)
-	, m_CablePixelCount(0)
-	, m_CableXOffset(0)
-	, m_CableSearchWidth(0)
 {
 
 }
@@ -130,19 +118,6 @@ void CBackUnitDialog::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT41, m_BlueBoxSearchWidth);
 	DDX_Text(pDX, IDC_EDIT42, m_BlueBoxMaxGapAround);
 	DDX_Check(pDX, IDC_CHECK6, m_ImagePreProcess);
-
-	DDX_Text(pDX, IDC_EDIT43, m_CableColorMin_R);
-	DDX_Text(pDX, IDC_EDIT51, m_CableColorMin_G);
-	DDX_Text(pDX, IDC_EDIT44, m_CableColorMin_B);
-	DDX_Text(pDX, IDC_EDIT45, m_CableColorMax_R);
-	DDX_Text(pDX, IDC_EDIT46, m_CableColorMax_G);
-	DDX_Text(pDX, IDC_EDIT47, m_CableColorMax_B);
-	DDX_Text(pDX, IDC_EDIT48, m_CableSearchMin);
-	DDX_Text(pDX, IDC_EDIT49, m_CableSearchMax);
-	DDX_Check(pDX, IDC_CHECK7, m_IsCableColorHSV);
-	DDX_Text(pDX, IDC_EDIT50, m_CablePixelCount);
-	DDX_Text(pDX, IDC_EDIT52, m_CableXOffset);
-	DDX_Text(pDX, IDC_EDIT53, m_CableSearchWidth);
 }
 
 
@@ -206,35 +181,7 @@ BOOL CBackUnitDialog::OnInitDialog()
 	else
 		EnableConstHeightControl(FALSE);
 
-	//added in 2014/7/29
-	if(IsHSV(m_BackDetectionUnit->CableDetector.ColorRange.Min()))
-	{
-		m_IsCableColorHSV = TRUE;
-		m_CableColorMin_R = cvRound(m_BackDetectionUnit->CableDetector.ColorRange.Min().val[0]*2);
-		m_CableColorMin_G = cvRound(m_BackDetectionUnit->CableDetector.ColorRange.Min().val[1]/2.55);
-		m_CableColorMin_B = cvRound(m_BackDetectionUnit->CableDetector.ColorRange.Min().val[2]/2.55);
 
-		m_CableColorMax_R = cvRound(m_BackDetectionUnit->CableDetector.ColorRange.Max().val[0]*2);
-		m_CableColorMax_G = cvRound(m_BackDetectionUnit->CableDetector.ColorRange.Max().val[1]/2.55);
-		m_CableColorMax_B = cvRound(m_BackDetectionUnit->CableDetector.ColorRange.Max().val[2]/2.55);
-	}
-	else
-	{
-		m_IsCableColorHSV = FALSE;
-		m_CableColorMin_R = (int)m_BackDetectionUnit->CableDetector.ColorRange.Min().val[2];
-		m_CableColorMin_G = (int)m_BackDetectionUnit->CableDetector.ColorRange.Min().val[1];
-		m_CableColorMin_B = (int)m_BackDetectionUnit->CableDetector.ColorRange.Min().val[0];
-
-		m_CableColorMax_R = (int)m_BackDetectionUnit->CableDetector.ColorRange.Max().val[2];
-		m_CableColorMax_G = (int)m_BackDetectionUnit->CableDetector.ColorRange.Max().val[1];
-		m_CableColorMax_B = (int)m_BackDetectionUnit->CableDetector.ColorRange.Max().val[0];
-	}	
-	m_CableSearchMin = m_BackDetectionUnit->CableDetector.SearchRange.Min();
-	m_CableSearchMax = m_BackDetectionUnit->CableDetector.SearchRange.Max();
-	m_CablePixelCount = m_BackDetectionUnit->CableDetector.PixelCount;
-	m_CableXOffset = m_BackDetectionUnit->CableDetector.XOffset;
-	m_CableSearchWidth = m_BackDetectionUnit->CableDetector.SearchWidth;
-	//end add 2014/7/29
 
 	if(IsHSV(m_BackDetectionUnit->BlueBox.ColorRange.Min()))
 	{
@@ -351,17 +298,6 @@ void CBackUnitDialog::OnOK()
 		m_BackDetectionUnit->PedestalFinder->ColorRange = Range<CvScalar>(CV_RGB(m_PedestalColorMin_R,m_PedestalColorMin_G,m_PedestalColorMin_B),CV_RGB(m_PedestalColorMax_R,m_PedestalColorMax_G,m_PedestalColorMax_B));
 	m_BackDetectionUnit->PedestalFinder->ScaleRange = Range<double>(m_PedestalScaleMin,m_PedestalScaleMax);
 	m_BackDetectionUnit->PedestalFinder->SizeRange = Range<int>(m_PedestalSizeMin,m_PedestalSizeMax);
-
-	//added in 2014/7/29
-	if(m_IsCableColorHSV)
-		m_BackDetectionUnit->CableDetector.ColorRange = Range<CvScalar>(CV_HSV(m_CableColorMin_R,m_CableColorMin_G,m_CableColorMin_B),CV_HSV(m_CableColorMax_R,m_CableColorMax_G,m_CableColorMax_B));
-	else
-		m_BackDetectionUnit->CableDetector.ColorRange = Range<CvScalar>(CV_RGB(m_CableColorMin_R,m_CableColorMin_G,m_CableColorMin_B),CV_RGB(m_CableColorMax_R,m_CableColorMax_G,m_CableColorMax_B));
-	m_BackDetectionUnit->CableDetector.SearchRange = Range<int>(m_CableSearchMin,m_CableSearchMax);
-	m_BackDetectionUnit->CableDetector.PixelCount = m_CablePixelCount;
-	m_BackDetectionUnit->CableDetector.XOffset = m_CableXOffset;
-	m_BackDetectionUnit->CableDetector.SearchWidth = m_CableSearchWidth;
-	//end add 2014/7/29
 
 	if(m_IsBlueBoxHSV)
 		m_BackDetectionUnit->BlueBox.ColorRange = Range<CvScalar>(CV_HSV(m_BlueBoxColorMin_R,m_BlueBoxColorMin_G,m_BlueBoxColorMin_B),CV_HSV(m_BlueBoxColorMax_R,m_BlueBoxColorMax_G,m_BlueBoxColorMax_B));

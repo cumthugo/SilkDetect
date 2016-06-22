@@ -242,31 +242,35 @@ bool CMFC_DetectionView::Detect( IplImage_Ptr img ,shared_ptr<DetectionProgram> 
 				{
 					dp->Detect(img,dr);
 				}
-				catch(const cv::Exception&)
-				{				
-					dr.ErrorCode = RESULT_FAIL_UNKNOWN;
+				catch(const cv::Exception& e)
+				{
+					dr.IsPass = false;
+					dr.ErrorString = e.err;
 				}
 				m_stopTimer = std::time(NULL);
 				//输出report
 				WriteReport(dr);
 			}
 			else
-			{			
-				dr.ErrorCode = RESULT_FAIL_CAMERA;
+			{
+				dr.IsPass = false;
+				dr.ErrorString = "获取图片错误！请检查摄像头的连接！";
 			}
 		}
 		else
-		{		
-			dr.ErrorCode = RESULT_FAIL_BAR_CODE;
+		{
+			dr.IsPass = false;
+			dr.ErrorString = "请扫条码！";
 		}
 		ForNextNumberInput();
 	}
 	else
-	{	
-		dr.ErrorCode = RESULT_FAIL_AUTH;
+	{
+		dr.IsPass = false;
+		dr.ErrorString = "无法使用检测程序，软件未注册！";
 	}
 	ShowResult(dr);
-	return dr.IsPass();
+	return dr.IsPass;
 }
 
 
@@ -275,6 +279,10 @@ shared_ptr<DetectionProgram> CMFC_DetectionView::GetDetectionProgram()
 
 	return m_FirstProgram;
 }
+
+
+
+
 
 void CMFC_DetectionView::OnBnClickedGetPic3()
 {
@@ -287,11 +295,10 @@ void CMFC_DetectionView::OnBnClickedGetPic3()
 
 void CMFC_DetectionView::ShowResult(DetectionResult& dr)
 {
-	itsResultImage.CopyOf(dr.ResultImage);	
-	m_ErrorString = ResultFactory::GetInstance()->GetErrorStringByErrorCode(dr.ErrorCode).c_str();
-	//need udpate
+	itsResultImage.CopyOf(dr.ResultImage);
+	m_ErrorString = dr.ErrorString.c_str();
 	m_Brush.DeleteObject();
-	if(dr.IsPass())
+	if(dr.IsPass)
 		m_Brush.CreateSolidBrush(RGB(0,255,0));
 	else
 		m_Brush.CreateSolidBrush(RGB(255,0,0));
@@ -341,6 +348,12 @@ void CMFC_DetectionView::OnPaint()
 	DrawRgn.CreateEllipticRgn(0,0,80,80);
 	GetDlgItem(IDC_STATE_PIC)->GetDC()->FillRgn(&DrawRgn,&m_Brush);
 }
+
+
+
+
+
+
 
 void CMFC_DetectionView::OnMenuSelectProgram()
 {
@@ -575,17 +588,22 @@ void CMFC_DetectionView::WriteReport(DetectionResult& dr)
 	dataFile << "ObjectID=" << m_strBarCode.GetString() << "\r\n";
 	dataFile << "StartTime=" << FormatTimeNomal(m_startTimer).GetString() << "\r\n";
 
-	dataFile << "No.   Test  Item Low Limit  Criterion  High Limit Unit   P/F Remark Value1 Time(ms)\r\n";
+	int totalNum = 0;
 	BOOST_FOREACH(ReportLine_Ptr& l, dr.Report)
 	{
-		if(auto unit = std::dynamic_pointer_cast<ReportUnit>(l))
+		if(auto item = std::dynamic_pointer_cast<ReportItem>(l))
 		{
-			unitID++;
-			itemID = 0;
+			totalNum ++;
 		}
-		else if(auto item = std::dynamic_pointer_cast<ReportItem>(l))
+	}
+	dataFile << "TestSteps="<<totalNum <<"\r\n";
+
+	dataFile << "No.\tTest Item\tLow Limit\tCriterion\tHigh Limit Unit\tP/F\tRemark\tValue1\tTime(ms)\r\n";
+	BOOST_FOREACH(ReportLine_Ptr& l, dr.Report)
+	{		
+		if(auto item = std::dynamic_pointer_cast<ReportItem>(l))
 		{
-			dataFile << unitID << '.' << ++itemID << "\t" << item->GetReportString() << "\r\n";
+			dataFile << ++itemID << "\t" << item->GetReportString() << "\r\n";
 		}
 	}
 	dataFile << "EndTime=" << FormatTimeNomal(m_stopTimer).GetString() << "\r\n";
@@ -594,7 +612,7 @@ void CMFC_DetectionView::WriteReport(DetectionResult& dr)
 
 	filepath = string("D:\\TestFlag\\") + BuildFileName(m_strBarCode.GetString(),"flg");
 	ofstream flagFile(filepath.c_str());
-	if(dr.IsPass())
+	if(dr.IsPass)
 		flagFile << 1;
 	else
 		flagFile << 0;
