@@ -6,10 +6,12 @@
 #pragma once
 
 #include "../DetectionLib/DetectionLine.hpp"
+#include "../DetectionLib/DetectionResult.hpp"
+
 #include "afxwin.h"
 
 
-struct DetectionResult;
+
 class CMFC_DetectionView : public CFormView
 {
 protected: // 仅从序列化创建
@@ -34,7 +36,8 @@ protected:
 	virtual void OnInitialUpdate(); // 构造后第一次调用
 
 //自己的接口
-	bool Detect( IplImage_Ptr img,shared_ptr<DetectionProgram> dp );
+
+	DetectionResult Detect( IplImage_Ptr img,shared_ptr<DetectionProgram> dp);
 	shared_ptr<DetectionProgram> GetDetectionProgram();
 	void ShowResult(DetectionResult& dr);
 	CvvImage itsResultImage;
@@ -50,7 +53,6 @@ protected:
 	//add in 2015/4/30 for param of save sample images
 	string itsScreenShotPath;
 	int itsMaxImagesPerFolder;
-
 // 实现
 public:
 	virtual ~CMFC_DetectionView();
@@ -98,6 +100,11 @@ public:
 	CString m_strBarCode;
 	time_t m_startTimer;
 	time_t m_stopTimer;
+//new report function
+	bool HasSecondStep();
+	//add in 2015/10/13 for save first step report
+	ReportLineList itsFirstSteprReport;
+	bool itsFirstResult;
 };
 
 #ifndef _DEBUG  // MFC_DetectionView.cpp 中的调试版本

@@ -176,7 +176,6 @@ void CMFC_DetectionView::OnInitialUpdate()
 	strMaxImage.Format("%d",itsMaxImagesPerFolder);
 	::WritePrivateProfileString("ScreenShot","MaxImages",strMaxImage,".\\Config.ini");
 
-
 	//读取配置文件
 	int comPort = ::GetPrivateProfileInt("COM","Port",1,".\\Config.ini");
 	CString StrPort;
@@ -240,7 +239,7 @@ void CMFC_DetectionView::OnBnClickedGetPic2()
 }
 
 
-bool CMFC_DetectionView::Detect( IplImage_Ptr img ,shared_ptr<DetectionProgram> dp )
+DetectionResult CMFC_DetectionView::Detect( IplImage_Ptr img ,shared_ptr<DetectionProgram> dp )
 {
 	DetectionResult dr;
 	UpdateData(TRUE);
@@ -250,37 +249,37 @@ bool CMFC_DetectionView::Detect( IplImage_Ptr img ,shared_ptr<DetectionProgram> 
 		{
 			if(img)
 			{
-				m_startTimer = std::time(NULL);
 				try
 				{
 					dp->SetScreenShot(itsScreenShotPath+ "\\" +dp->Name,itsMaxImagesPerFolder); //add in 2015/4/28
 					dp->Detect(img,dr);
 				}
-				catch(const cv::Exception&)
-				{				
-					dr.ErrorCode = RESULT_FAIL_UNKNOWN;
-				}
-				m_stopTimer = std::time(NULL);
-				//输出report
-				WriteReport(dr);
+				catch(const cv::Exception& e)
+				{
+					dr.IsPass = false;
+					dr.ErrorString = e.err;
+				}				
 			}
 			else
-			{			
-				dr.ErrorCode = RESULT_FAIL_CAMERA;
+			{
+				dr.IsPass = false;
+				dr.ErrorString = "获取图片错误！请检查摄像头的连接！";
 			}
 		}
 		else
-		{		
-			dr.ErrorCode = RESULT_FAIL_BAR_CODE;
+		{
+			dr.IsPass = false;
+			dr.ErrorString = "请扫条码！";
 		}
 		ForNextNumberInput();
 	}
 	else
-	{	
-		dr.ErrorCode = RESULT_FAIL_AUTH;
+	{
+		dr.IsPass = false;
+		dr.ErrorString = "无法使用检测程序，软件未注册！";
 	}
 	ShowResult(dr);
-	return dr.IsPass();
+	return dr;
 }
 
 
@@ -289,6 +288,10 @@ shared_ptr<DetectionProgram> CMFC_DetectionView::GetDetectionProgram()
 
 	return m_FirstProgram;
 }
+
+
+
+
 
 void CMFC_DetectionView::OnBnClickedGetPic3()
 {
@@ -301,11 +304,10 @@ void CMFC_DetectionView::OnBnClickedGetPic3()
 
 void CMFC_DetectionView::ShowResult(DetectionResult& dr)
 {
-	itsResultImage.CopyOf(dr.ResultImage);	
-	m_ErrorString = ResultFactory::GetInstance()->GetErrorStringByErrorCode(dr.ErrorCode).c_str();
-	//need udpate
+	itsResultImage.CopyOf(dr.ResultImage);
+	m_ErrorString = dr.ErrorString.c_str();
 	m_Brush.DeleteObject();
-	if(dr.IsPass())
+	if(dr.IsPass)
 		m_Brush.CreateSolidBrush(RGB(0,255,0));
 	else
 		m_Brush.CreateSolidBrush(RGB(255,0,0));
@@ -356,24 +358,27 @@ void CMFC_DetectionView::OnPaint()
 	GetDlgItem(IDC_STATE_PIC)->GetDC()->FillRgn(&DrawRgn,&m_Brush);
 }
 
+
+
+
+
+
+
 void CMFC_DetectionView::OnMenuSelectProgram()
 {
-	//add 2014.10.29
-	if(PassPassword())
+	//CProgramSelectDialog dlg(DIALOG_SELECT);
+	//dlg.DoModal();
+	CSelectProgramDialog dlg;
+	dlg.m_FirstStepLine = &m_FirstStepLine;
+	dlg.m_SecondStepLine = &m_SecondStepLine;
+	dlg.m_FirstProgram = m_FirstProgram;
+	dlg.m_SecondProgram = m_SecondProgram;
+	if(dlg.DoModal() == IDOK)
 	{
-
-		CSelectProgramDialog dlg;
-		dlg.m_FirstStepLine = &m_FirstStepLine;
-		dlg.m_SecondStepLine = &m_SecondStepLine;
-		dlg.m_FirstProgram = m_FirstProgram;
-		dlg.m_SecondProgram = m_SecondProgram;
-		if(dlg.DoModal() == IDOK)
-		{
-			m_FirstProgram = dlg.m_FirstProgram;
-			m_SecondProgram = dlg.m_SecondProgram;
-			::WritePrivateProfileString("Program","FirstProgramName",m_FirstProgram->Name.c_str(),".\\Config.ini");
-			::WritePrivateProfileString("Program","SecondProgramName",m_SecondProgram->Name.c_str(),".\\Config.ini");
-		}
+		m_FirstProgram = dlg.m_FirstProgram;
+		m_SecondProgram = dlg.m_SecondProgram;
+		::WritePrivateProfileString("Program","FirstProgramName",m_FirstProgram->Name.c_str(),".\\Config.ini");
+		::WritePrivateProfileString("Program","SecondProgramName",m_SecondProgram->Name.c_str(),".\\Config.ini");
 	}
 }
 
@@ -452,23 +457,44 @@ void CMFC_DetectionView::OnUpdateMenuSelectProgram(CCmdUI *pCmdUI)
 LRESULT CMFC_DetectionView::OnCommProc( WPARAM wParam, LPARAM lParam )
 {
 		UCHAR cmd = (UCHAR)wParam;
+		shared_ptr<ImageSource> camera_source = ImageSourceFactory::GetImageFromCamera();
+		IplImage_Ptr img = camera_source->GetImage(); 		
 		if(cmd == 0xA0)
-		{
-			shared_ptr<ImageSource> camera_source = ImageSourceFactory::GetImageFromCamera();
-			IplImage_Ptr img = camera_source->GetImage();
-			if(Detect(img,GetDetectionProgram()))
+		{						
+			m_startTimer = std::time(NULL); //anyway, start time from here
+			DetectionResult dr = Detect(img,GetDetectionProgram());
+			if(dr.IsPass)
 				gCommObject.SendCommData(0x01);
 			else
 				gCommObject.SendCommData(0x02);
+			if(HasSecondStep())
+			{
+				itsFirstSteprReport = dr.Report;	
+				itsFirstResult = dr.IsPass;
+			}
+			else
+			{
+				m_stopTimer = std::time(NULL);
+				//输出report, 
+				WriteReport(dr);
+			}	
 		}
 		else if(cmd == 0xA1)
-		{
-			shared_ptr<ImageSource> camera_source = ImageSourceFactory::GetImageFromCamera();
-			IplImage_Ptr img = camera_source->GetImage();
-			if(Detect(img,m_SecondProgram))
+		{			
+			DetectionResult dr = Detect(img,m_SecondProgram);
+			if(dr.IsPass)
 				gCommObject.SendCommData(0x01);
 			else
 				gCommObject.SendCommData(0x02);
+
+			//sure has second step,
+			std::copy(itsFirstSteprReport.rbegin(),itsFirstSteprReport.rend(),front_inserter(dr.Report)); // insert first result
+			dr.IsPass = dr.IsPass & itsFirstResult;
+			m_stopTimer = std::time(NULL);
+			//输出report,
+			WriteReport(dr);
+			itsFirstSteprReport.clear();
+			itsFirstResult = false;
 		}
 	return 0;
 }
@@ -589,8 +615,8 @@ void CMFC_DetectionView::WriteReport(DetectionResult& dr)
 	string filepath = string("D:\\TestData\\") + BuildFileName(m_strBarCode.GetString(),"dat");
 	ofstream dataFile(filepath.c_str());
 
-	dataFile << "ObjectID=" << m_strBarCode.GetString() << "\r\n";
-	dataFile << "StartTime=" << FormatTimeNomal(m_startTimer).GetString() << "\r\n";
+	dataFile << "ObjectID=" << m_strBarCode.GetString() << "\n";
+	dataFile << "StartTime=" << FormatTimeNomal(m_startTimer).GetString() << "\n";
 
 	int totalNum = 0;
 	BOOST_FOREACH(ReportLine_Ptr& l, dr.Report)
@@ -600,25 +626,32 @@ void CMFC_DetectionView::WriteReport(DetectionResult& dr)
 			totalNum ++;
 		}
 	}
-	dataFile << "TestSteps="<<totalNum <<"\r\n";
+	dataFile << "TestSteps="<<totalNum <<"\n";
 
-	dataFile << "No.\tTest Item\tLow Limit\tCriterion\tHigh Limit Unit\tP/F\tRemark\tValue1\tTime(ms)\r\n";
+	dataFile << "No.\tTest Item\tLow Limit\tCriterion\tHigh Limit Unit\tP/F\tRemark\tValue1\tTime(ms)\n";
 	BOOST_FOREACH(ReportLine_Ptr& l, dr.Report)
 	{		
 		if(auto item = std::dynamic_pointer_cast<ReportItem>(l))
 		{
-			dataFile << ++itemID << "\t" << item->GetReportString() << "\r\n";
+			dataFile << ++itemID << "\t" << item->GetReportString() << "\n";
 		}
 	}
-	dataFile << "EndTime=" << FormatTimeNomal(m_stopTimer).GetString() << "\r\n";
+	dataFile << "EndTime=" << FormatTimeNomal(m_stopTimer).GetString() << "\n";
 
 	dataFile.close();
 
 	filepath = string("D:\\TestFlag\\") + BuildFileName(m_strBarCode.GetString(),"flg");
 	ofstream flagFile(filepath.c_str());
-	if(dr.IsPass())
+	if(dr.IsPass)
 		flagFile << 1;
 	else
 		flagFile << 0;
 	flagFile.close();
 }
+
+bool CMFC_DetectionView::HasSecondStep()
+{
+	return m_SecondProgram->Name != "";
+}
+
+

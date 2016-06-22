@@ -13,8 +13,6 @@ int ObjectDetectAlgorithm::ObjectChangePosition( const IplImage_Ptr sourceImage,
 	int y_to = scanDirection == SCAN_FROM_BOTTOM ? detectRect.y : detectRect.y + detectRect.height;
 	int y_index;
 
-	if(y_from == y_to) return 0; // if range error, just pass
-
 	foreach_int(y_index,y_from,y_to)
 	{
 		int fitCount = XColorCount(sourceImage,colorRange,detectRect.x,y_index,detectRect.width);
@@ -40,97 +38,10 @@ bool ObjectDetectAlgorithm::isObjectInRect( const IplImage_Ptr sourceImage, cons
 	return ObjectChangePosition(sourceImage,detectRect,colorRange,objectWidth,scanDirection,detectFlag) != OBJECT_NOT_FIND;
 }
 
-/************************************************************************/
-/* below is used for detect cable --added in 2014/7/28                  */
-/************************************************************************/
-void CommonCableDetectAlgorithm::Detect( const IplImage_Ptr sourceImage,const CvRect& PedestalRect,int PedestalPosition,DetectionResult& result )
-{
-	const int &x(PedestalRect.x),&width(PedestalRect.width);
-	//图像的180°旋转只影响到y的值
-	int y = PEDESTAL_ON_BOTTOM == PedestalPosition ? PedestalRect.y : (PedestalRect.y + PedestalRect.height);
-	int Cable_y = PEDESTAL_ON_BOTTOM == PedestalPosition ? y-SearchRange.Max() : (y + SearchRange.Min());
-	int Cable_width = SearchWidth == 0 ? width-2*XOffset : SearchWidth;
-	int Cable_height = SearchRange.Max()-SearchRange.Min();
-	int Cable_x = x+XOffset;	
-	CvRect CableRect = cvRect(Cable_x,Cable_y,Cable_width,Cable_height);
-	
-	//图像的180°旋转还影响检测的扫描顺序
-	ScanDirection CableScanDir = PEDESTAL_ON_BOTTOM == PedestalPosition ? SCAN_FROM_BOTTOM : SCAN_FROM_TOP;
-	//restrict;for safe
-	RestrictRect(CableRect,cvRect(0,0,sourceImage->width,sourceImage->height));	
-
-	int Object_y = ObjectChangePosition(sourceImage,CableRect,ColorRange,PixelCount,CableScanDir,DETECT_FLAG_APPEAR);	
-
-	if(Object_y == OBJECT_NOT_FIND )
-	{		
-		result.ErrorCode = RESULT_FAIL_CABLE;
-		FillRect(result.ResultImage,CableRect,CV_RGB(100,0,0));		
-		return;
-	}
-}
-
-ptree CommonCableDetectAlgorithm::GetTree() const
-{
-	ptree pt;
-	pt.put_child("ColorRange.Min",GetColorTree(ColorRange.Min()));
-	pt.put_child("ColorRange.Max",GetColorTree(ColorRange.Max()));
-	pt.put("SearchRange.Min",SearchRange.Min());
-	pt.put("SearchRange.Max",SearchRange.Max());
-	pt.put("PixelCount",PixelCount);
-
-	pt.put("XOffset",XOffset);
-	pt.put("SearchWidth",SearchWidth);
-
-	return pt;
-}
-
-void CommonCableDetectAlgorithm::ReadFromTree( const wptree& wpt )
-{
-	using boost::property_tree::ptree_bad_path;
-	CvScalar color_from,color_to;
-	int size_from,size_to;
-	try
-	{
-		color_from = ReadColorFromTree(wpt.get_child(L"ColorRange.Min")); //should use default value for update
-		color_to = ReadColorFromTree(wpt.get_child(L"ColorRange.Max"));
-	}
-	catch (ptree_bad_path&)
-	{
-		color_from = CV_RGB(0,0,0);
-		color_to = CV_RGB(255,255,255);
-	}
-	
-	ColorRange = Range<CvScalar>(color_from,color_to);
-	size_from = wpt.get<int>(L"SearchRange.Min",0);
-	size_to = wpt.get<int>(L"SearchRange.Max",10);
-	SearchRange = Range<int>(size_from,size_to);
-	PixelCount = wpt.get<int>(L"PixelCount",0);
-
-	XOffset = wpt.get<int>(L"XOffset",0);
-	SearchWidth = wpt.get<int>(L"SearchWidth",0);
-}
-
-bool operator==( const CommonCableDetectAlgorithm& lhs, const CommonCableDetectAlgorithm& rhs )
-{
-	return  lhs.ColorRange == rhs.ColorRange &&
-		lhs.SearchRange == rhs.SearchRange &&
-		lhs.PixelCount == rhs.PixelCount;
-}
-
-bool operator!=( const CommonCableDetectAlgorithm& lhs, const CommonCableDetectAlgorithm& rhs )
-{
-	return !(lhs == rhs);
-}
-
-ostream& operator<<( ostream& o, const CommonCableDetectAlgorithm& rhs )
-{
-	o << rhs.ColorRange << rhs.SearchRange << rhs.PixelCount;
-	return o;
-}
-
 
 void CommonSilkDetectAlgorithm::Detect( const IplImage_Ptr sourceImage,const CvRect& PedestalRect,int PedestalPosition,DetectionResult& result )
-{	
+{
+	result.IsPass = false;
 	const int &x(PedestalRect.x),&width(PedestalRect.width);
 	//图像的180°旋转只影响到y的值
 	int y = PEDESTAL_ON_BOTTOM == PedestalPosition ? PedestalRect.y : (PedestalRect.y + PedestalRect.height);
@@ -152,8 +63,7 @@ void CommonSilkDetectAlgorithm::Detect( const IplImage_Ptr sourceImage,const CvR
 
 	if(Object_Left_y == OBJECT_NOT_FIND || Object_Right_y == OBJECT_NOT_FIND)
 	{
-		
-		result.ErrorCode = RESULT_FAIL_SILK;
+		result.ErrorString = ResultFactory::GetInstance()->GetSilkErrorString();
 		FillRect(result.ResultImage,LeftSilkRect,CV_RGB(100,0,0));
 		FillRect(result.ResultImage,RightSilkRect,CV_RGB(100,0,0));
 		return;
@@ -162,13 +72,14 @@ void CommonSilkDetectAlgorithm::Detect( const IplImage_Ptr sourceImage,const CvR
 	if(MaxGapAround >= 0)
 	{
 		if(abs(Object_Left_y-Object_Right_y) > MaxGapAround)
-		{			
-			result.ErrorCode = RESULT_FAIL_SILK;
+		{
+			result.ErrorString = ResultFactory::GetInstance()->GetSilkErrorString();
 			FillRect(result.ResultImage,LeftSilkRect,CV_RGB(100,0,0));
 			FillRect(result.ResultImage,RightSilkRect,CV_RGB(100,0,0));
 			return;
 		}
-	}	
+	}
+	result.IsPass = true;
 }
 
 ptree CommonSilkDetectAlgorithm::GetTree() const
@@ -225,6 +136,7 @@ ostream& operator<<( ostream& o, const CommonSilkDetectAlgorithm& rhs )
 
 void FrontLockDetectAlgorithm::Detect( const IplImage_Ptr sourceImage,const CvRect& PedestalRect,int PedestalPosition,DetectionResult& result )
 {
+	result.IsPass = false;
 	const int &x(PedestalRect.x),&width(PedestalRect.width);
 	//图像的180°旋转只影响到y的值
 	int y = PEDESTAL_ON_BOTTOM == PedestalPosition ? PedestalRect.y : (PedestalRect.y + PedestalRect.height);
@@ -238,17 +150,18 @@ void FrontLockDetectAlgorithm::Detect( const IplImage_Ptr sourceImage,const CvRe
 	RestrictRect(RightLockRect,cvRect(0,0,sourceImage->width,sourceImage->height));
 
 	if(!isObjectInRect(sourceImage,LeftLockRect,ColorRange,PixelCount,LockScanDir,DetectFlag))
-	{		
-		result.ErrorCode = RESULT_FAIL_LOCK;
+	{
+		result.ErrorString = ResultFactory::GetInstance()->GetLockErrorString();
 		FillRect(result.ResultImage,LeftLockRect,CV_RGB(100,0,0));
 		return;
 	}
 	if(!isObjectInRect(sourceImage,RightLockRect,ColorRange,PixelCount,LockScanDir,DetectFlag))
-	{		
-		result.ErrorCode = RESULT_FAIL_LOCK;
+	{
+		result.ErrorString = ResultFactory::GetInstance()->GetLockErrorString();
 		FillRect(result.ResultImage,RightLockRect,CV_RGB(100,0,0));
 		return;
 	}
+	result.IsPass = true;
 }
 
 ptree FrontLockDetectAlgorithm::GetTree() const
@@ -303,6 +216,7 @@ ostream& operator<<( ostream& o, const FrontLockDetectAlgorithm& rhs )
 
 void BackLockDetectAlgorithm::Detect( const IplImage_Ptr sourceImage,const CvRect& PedestalRect,int PedestalPosition,DetectionResult& result )
 {
+	result.IsPass = false;
 	const int &x(PedestalRect.x),&width(PedestalRect.width);
 	//图像的180°旋转只影响到y的值
 	int y = PedestalPosition == PEDESTAL_ON_BOTTOM ? PedestalRect.y : (PedestalRect.y + PedestalRect.height);
@@ -314,11 +228,12 @@ void BackLockDetectAlgorithm::Detect( const IplImage_Ptr sourceImage,const CvRec
 	RestrictRect(Rect,cvRect(0,0,sourceImage->width,sourceImage->height));
 
 	if(!isObjectInRect(sourceImage,Rect,ColorRange,PixelCount,ScanDir,DetectFlag))
-	{		
-		result.ErrorCode = RESULT_FAIL_LOCK;
+	{
+		result.ErrorString = ResultFactory::GetInstance()->GetLockErrorString();
 		FillRect(result.ResultImage,Rect,CV_RGB(100,0,0));
 		return;
 	}
+	result.IsPass = true;
 }
 
 ptree BackLockDetectAlgorithm::GetTree() const
