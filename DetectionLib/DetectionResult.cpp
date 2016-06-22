@@ -68,7 +68,7 @@ shared_ptr<ResultFactory> ResultFactory::GetInstance()
 string ReportItem::GetReportString() const
 {
 	string passStr = Pass ? "P" : "F";
-	return string(Unit + "_" + Name + "\tBOOL\t" + passStr + "\t1\t" + boost::lexical_cast<string>(Time));
+	return string(Unit + "_" + Name + "\t\tBOOL\t\t\t" + passStr + "\t\t1\t" + boost::lexical_cast<string>(Time));
 }
 
 void DetectionResult::AddItemReport( const string& unit, const string& name, bool pass, long time )

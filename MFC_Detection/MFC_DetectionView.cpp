@@ -578,17 +578,22 @@ void CMFC_DetectionView::WriteReport(DetectionResult& dr)
 	dataFile << "ObjectID=" << m_strBarCode.GetString() << "\r\n";
 	dataFile << "StartTime=" << FormatTimeNomal(m_startTimer).GetString() << "\r\n";
 
-	dataFile << "No.   Test  Item Low Limit  Criterion  High Limit Unit   P/F Remark Value1 Time(ms)\r\n";
+	int totalNum = 0;
 	BOOST_FOREACH(ReportLine_Ptr& l, dr.Report)
 	{
-		if(auto unit = std::dynamic_pointer_cast<ReportUnit>(l))
+		if(auto item = std::dynamic_pointer_cast<ReportItem>(l))
 		{
-			unitID++;
-			itemID = 0;
+			totalNum ++;
 		}
-		else if(auto item = std::dynamic_pointer_cast<ReportItem>(l))
+	}
+	dataFile << "TestSteps="<<totalNum <<"\r\n";
+
+	dataFile << "No.\tTest Item\tLow Limit\tCriterion\tHigh Limit Unit\tP/F\tRemark\tValue1\tTime(ms)\r\n";
+	BOOST_FOREACH(ReportLine_Ptr& l, dr.Report)
+	{		
+		if(auto item = std::dynamic_pointer_cast<ReportItem>(l))
 		{
-			dataFile << unitID << '.' << ++itemID << "\t" << item->GetReportString() << "\r\n";
+			dataFile << ++itemID << "\t" << item->GetReportString() << "\r\n";
 		}
 	}
 	dataFile << "EndTime=" << FormatTimeNomal(m_stopTimer).GetString() << "\r\n";
