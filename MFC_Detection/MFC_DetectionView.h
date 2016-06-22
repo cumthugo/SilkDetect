@@ -47,10 +47,6 @@ protected:
 	shared_ptr<DetectionProgram> m_FirstProgram;
 	shared_ptr<DetectionProgram> m_SecondProgram;
 
-	//add in 2015/4/30 for param of save sample images
-	string itsScreenShotPath;
-	int itsMaxImagesPerFolder;
-
 // й╣ож
 public:
 	virtual ~CMFC_DetectionView();

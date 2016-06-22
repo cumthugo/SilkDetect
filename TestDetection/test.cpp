@@ -307,14 +307,13 @@ void Test::Test_FrontDetectionUnit()
 		testImg= cvLoadImage(fmt.str().c_str());
 		CPPUNIT_ASSERT(testImg);
 		cout << "\n检测图片文件" << i << ".jpg";
-		dp.UnLock();
 		dp.Detect(testImg,dr);
-		cout << "\t------"<<dr.ErrorCode;
+		cout << "\t------"<<dr.ErrorString;
 		
 		if(result[i-1])
-			CPPUNIT_ASSERT_EQUAL(true,dr.IsPass());
+			CPPUNIT_ASSERT_EQUAL(true,dr.IsPass);
 		else
-			CPPUNIT_ASSERT_EQUAL(false,dr.IsPass());
+			CPPUNIT_ASSERT_EQUAL(false,dr.IsPass);
 	}
 }
 
@@ -363,10 +362,9 @@ void Test::Test_FrontDetectioinUnit2()
 		testImg= cvLoadImage(fmt.str().c_str());
 		CPPUNIT_ASSERT(testImg);
 		cout << "\n检测图片文件" << i << ".jpg";
-		dp.UnLock();
 		dp.Detect(testImg,dr);
-		cout << "\t------"<<dr.ErrorCode;
-		if(!dr.IsPass())
+		cout << "\t------"<<dr.ErrorString;
+		if(!dr.IsPass)
 		{
 			cvNamedWindow("hello");
 			cvShowImage("hello",dr.ResultImage);
@@ -374,9 +372,9 @@ void Test::Test_FrontDetectioinUnit2()
 			cvDestroyWindow("hello");
 		}
 		if(result[i-1])
-			CPPUNIT_ASSERT_EQUAL(true,dr.IsPass());
+			CPPUNIT_ASSERT_EQUAL(true,dr.IsPass);
 		else
-			CPPUNIT_ASSERT_EQUAL(false,dr.IsPass());/**/
+			CPPUNIT_ASSERT_EQUAL(false,dr.IsPass);/**/
 	}
 }
 
@@ -420,10 +418,9 @@ void Test::Test_FrontDetectionUnitSilkOnBottom()
 		testImg= cvLoadImage(fmt.str().c_str());
 		CPPUNIT_ASSERT(testImg);
 		cout << "\n检测图片文件" << i << ".jpg";
-		dp.UnLock();
 		dp.Detect(testImg,dr);
-		cout << "\t------"<<dr.ErrorCode;
-		/*if(!dr.IsPass())
+		cout << "\t------"<<dr.ErrorString;
+		/*if(!dr.IsPass)
 		{
 			cvNamedWindow("hello");
 			cvShowImage("hello",dr.ResultImage);
@@ -431,9 +428,9 @@ void Test::Test_FrontDetectionUnitSilkOnBottom()
 			cvDestroyWindow("hello");
 		}*/
 		if(result[i-1])
-			CPPUNIT_ASSERT_EQUAL(true,dr.IsPass());
+			CPPUNIT_ASSERT_EQUAL(true,dr.IsPass);
 		else
-			CPPUNIT_ASSERT_EQUAL(false,dr.IsPass());
+			CPPUNIT_ASSERT_EQUAL(false,dr.IsPass);
 	}
 }
 
@@ -468,9 +465,8 @@ void Test::Test_InclinedPicture()
 
 	testImg= cvLoadImage("E:\\project\\天宝电子\\排线检测\\left1Pic\\8.jpg");
 	CPPUNIT_ASSERT(testImg);
-	dp.UnLock();
 	dp.Detect(testImg,dr);
-	CPPUNIT_ASSERT_EQUAL(true,dr.IsPass());
+	CPPUNIT_ASSERT_EQUAL(true,dr.IsPass);
 }
 
 
@@ -567,7 +563,7 @@ void Test::Test_DetectProgram()
 	IplImage_Ptr testImg = cvLoadImage("E:\\project\\天宝电子\\排线检测\\testWholePic\\1.jpg");
 
 	dp.Detect(testImg,dr);
-	CPPUNIT_ASSERT_EQUAL(true,dr.IsPass());
+	CPPUNIT_ASSERT_EQUAL(true,dr.IsPass);
 	/*cvNamedWindow("hello");
 	cvShowImage("hello",dr.ResultImage);
 	cvWaitKey();*/
@@ -647,9 +643,9 @@ void Test::Test_DetectProgramRealPic()
 	IplImage_Ptr testImg = cvLoadImage("E:\\project\\天宝电子\\排线检测\\testWholePic\\2.jpg");
 
 	dp.Detect(testImg,dr);
-	CPPUNIT_ASSERT_EQUAL(true,dr.IsPass());
-	cout << endl << dr.ErrorCode << endl;
-	/*if(!dr.IsPass())
+	CPPUNIT_ASSERT_EQUAL(true,dr.IsPass);
+	cout << endl << dr.ErrorString << endl;
+	/*if(!dr.IsPass)
 	{
 		cvNamedWindow("hello");
 		cvShowImage("hello",dr.ResultImage);
@@ -687,9 +683,9 @@ void Test::Test_BackDetectionUnit()
 
 	IplImage_Ptr testImg = cvLoadImage("E:\\project\\天宝电子\\排线检测\\testBackPic\\2.jpg");
 	dp.Detect(testImg,dr);
-	cout << endl << dr.ErrorCode << endl;
-	CPPUNIT_ASSERT_EQUAL(false,dr.IsPass());
-	if(!dr.IsPass())
+	cout << endl << dr.ErrorString << endl;
+	CPPUNIT_ASSERT_EQUAL(false,dr.IsPass);
+	if(!dr.IsPass)
 	{
 		cvNamedWindow("hello");
 		cvShowImage("hello",dr.ResultImage);
@@ -731,8 +727,8 @@ void Test::Test_HardFrontDetectionUnit()
 		CPPUNIT_ASSERT(testImg);
 		cout << "\n检测图片文件" << i << ".jpg";
 		dp.Detect(testImg,dr);
-		cout << "\t------"<<dr.ErrorCode;
-		/*if(!dr.IsPass())
+		cout << "\t------"<<dr.ErrorString;
+		/*if(!dr.IsPass)
 		{
 			cvNamedWindow("hello");
 			cvShowImage("hello",dr.ResultImage);
@@ -740,9 +736,9 @@ void Test::Test_HardFrontDetectionUnit()
 			cvDestroyWindow("hello");
 		}*/
 		if(result[i-1])
-			CPPUNIT_ASSERT_EQUAL(true,dr.IsPass());
+			CPPUNIT_ASSERT_EQUAL(true,dr.IsPass);
 		else
-			CPPUNIT_ASSERT_EQUAL(false,dr.IsPass());/**/
+			CPPUNIT_ASSERT_EQUAL(false,dr.IsPass);/**/
 	}
 }
 
@@ -807,8 +803,8 @@ void Test::Test_Silk_LeftAndRight()
 	CPPUNIT_ASSERT(testImg);
 	cout << "\n检测图片文件" << 6 << ".jpg";
 	dp.Detect(testImg,dr);
-	cout << "\t------"<<dr.ErrorCode;
-	if(!dr.IsPass())
+	cout << "\t------"<<dr.ErrorString;
+	if(!dr.IsPass)
 	{
 		cvNamedWindow("hello");
 		cvShowImage("hello",dr.ResultImage);
@@ -875,7 +871,7 @@ void Test::Test_SilkOnRight()
 	CPPUNIT_ASSERT(testImg);
 	cout << "\n检测垂直图片文件rotate1.jpg";
 	dp.Detect(testImg,dr);
-	cout << "\t------"<<dr.ErrorCode;
-	CPPUNIT_ASSERT_EQUAL(true,dr.IsPass());
+	cout << "\t------"<<dr.ErrorString;
+	CPPUNIT_ASSERT_EQUAL(true,dr.IsPass);
 
 }
