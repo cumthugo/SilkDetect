@@ -11,6 +11,7 @@
 #include "../DetectionLib/BackDetectionUnit.hpp"
 #include "../DetectionLib/HardLockDetectionUnit.hpp"
 #include "../DetectionLib/DetectionUnitFactory.hpp"
+#include "../DetectionLib/NoLockDetectionUnit.hpp"
 
 #include "../DetectionLib/PedestalFindAlgorithm.hpp"
 
@@ -175,6 +176,31 @@ void Test::Test_UnitSerialization()
 	CPPUNIT_ASSERT_EQUAL(*hld,*hld_read);
 
 
+	//no lock
+	shared_ptr<NoLockDetectionUnit> nld(new NoLockDetectionUnit);
+	nld->Name = "上面";
+	nld->SubImageRect = cvRect(1,2,3,4);
+	nld->PedestalPosition = PEDESTAL_ON_BOTTOM;
+
+	nld->PedestalFinder = shared_ptr<PedestalFindAlgorithm>(new SimplePedestalFinder);
+	nld->PedestalFinder->ColorRange =  Range<CvScalar>(CV_RGB(185,235,170),CV_RGB(220,256,210));
+	nld->PedestalFinder->ScaleRange = Range<double>(2.,20.);
+	nld->PedestalFinder->SizeRange = Range<int>(60,350);
+
+	nld->Silk.ColorRange =  Range<CvScalar>(CV_RGB(0,0,0),CV_RGB(100,100,100));
+	nld->Silk.SearchRange = Range<int>(40,44);
+	nld->Silk.PixelCount = 30;
+	nld->Silk.DetectFlag = ObjectDetectAlgorithm::DETECT_FLAG_APPEAR;
+
+	shared_ptr<DetectionUnit> da4(nld);
+	write_xml("./no_lock_detection_unit.xml",da4->GetTree());
+	read_xml("./no_lock_detection_unit.xml",pt_read);
+	shared_ptr<DetectionUnit> da_read4 = DetectionUnitFactory::CreateUnitFromTree(pt_read);
+	shared_ptr<NoLockDetectionUnit> nld_read = dynamic_pointer_cast<NoLockDetectionUnit>(da_read4);
+	CPPUNIT_ASSERT(nld_read);
+	CPPUNIT_ASSERT_EQUAL(*nld,*nld_read);
+
+
 	DetectionProgram dp("Test Detection Program");
 	dp.push_back(da);
 	dp.push_back(da3);
@@ -300,7 +326,8 @@ void Test::Test_FrontDetectioinUnit2()
 
 
 	sa->PedestalPosition = PEDESTAL_ON_BOTTOM;
-
+	
+	sa->PreProcess  = 1;
 	sa->PedestalFinder = shared_ptr<PedestalFindAlgorithm>(new SimplePedestalFinder);
 	sa->PedestalFinder->ColorRange = Range<CvScalar>(CV_RGB(190,190,190),CV_RGB(240,240,240));
 	sa->PedestalFinder->ScaleRange = Range<double>(1.8,2.5);
@@ -322,8 +349,8 @@ void Test::Test_FrontDetectioinUnit2()
 	dp.push_back(sa);
 
 
-	int result[]={		1,1,0,0,0,
-						0,0,1,1,1,
+	int result[]={		1,1,0,0,1,
+						1,1,1,1,1,
 						1,1,0,1,0,
 						0,0,0,0,0,
 						0,0,0,0,0,
@@ -337,11 +364,17 @@ void Test::Test_FrontDetectioinUnit2()
 		cout << "\n检测图片文件" << i << ".jpg";
 		dp.Detect(testImg,dr);
 		cout << "\t------"<<dr.ErrorString;
-
+		if(!dr.IsPass)
+		{
+			cvNamedWindow("hello");
+			cvShowImage("hello",dr.ResultImage);
+			cvWaitKey(0);
+			cvDestroyWindow("hello");
+		}
 		if(result[i-1])
 			CPPUNIT_ASSERT_EQUAL(true,dr.IsPass);
 		else
-			CPPUNIT_ASSERT_EQUAL(false,dr.IsPass);
+			CPPUNIT_ASSERT_EQUAL(false,dr.IsPass);/**/
 	}
 }
 
@@ -351,6 +384,7 @@ void Test::Test_FrontDetectionUnitSilkOnBottom()
 	DetectionResult dr;
 
 	sa->PedestalPosition = PEDESTAL_ON_TOP;
+	sa->PreProcess = 1;
 	sa->PedestalFinder = shared_ptr<PedestalFindAlgorithm>(new SimplePedestalFinder);
 	sa->PedestalFinder->ColorRange = Range<CvScalar>(CV_HSV(0,2,80),CV_HSV(100,10,90));
 	sa->PedestalFinder->ScaleRange = Range<double>(2.0,2.8);
@@ -373,7 +407,7 @@ void Test::Test_FrontDetectionUnitSilkOnBottom()
 	IplImage_Ptr testImg;
 
 	int result[]={		1,1,0,1,1,
-						0,0,0,1,1,
+						1,1,1,1,1,
 						1,1,1,1,0,
 						0,0,0,0,0,
 						0,0};
@@ -408,6 +442,7 @@ void Test::Test_InclinedPicture()
 	DetectionResult dr;
 
 	sa->PedestalPosition = PEDESTAL_ON_TOP;
+	sa->PreProcess = 1;
 	sa->PedestalFinder = shared_ptr<PedestalFindAlgorithm>(new InclinedPedestalFinder);
 	sa->PedestalFinder->ColorRange = Range<CvScalar>(CV_HSV(0,2,80),CV_HSV(100,10,90));
 	sa->PedestalFinder->ScaleRange = Range<double>(2.0,2.8);
@@ -431,10 +466,6 @@ void Test::Test_InclinedPicture()
 	testImg= cvLoadImage("E:\\project\\天宝电子\\排线检测\\left1Pic\\8.jpg");
 	CPPUNIT_ASSERT(testImg);
 	dp.Detect(testImg,dr);
-	cout << dr.ErrorString;
-	cvNamedWindow("hello");
-	cvShowImage("hello",dr.ResultImage);
-	cvWaitKey();
 	CPPUNIT_ASSERT_EQUAL(true,dr.IsPass);
 }
 
@@ -446,7 +477,7 @@ void Test::Test_HSV()
 
 
 	//CPPUNIT_ASSERT_EQUAL(CV_HSV(209,100,60),CvtRGB2HSV(CV_RGB(0,78,152)));
-	/*IplImage_Ptr img = cvLoadImage("F:\\project\\天宝电子\\排线检测\\left1Pic\\1.jpg");
+	/*IplImage_Ptr img = cvLoadImage("E:\\project\\天宝电子\\排线检测\\left1Pic\\1.jpg");
 	
 	IplImage_Ptr grayImage = cvCreateImage(cvGetSize(img),img->depth,1);
 	
@@ -650,17 +681,17 @@ void Test::Test_BackDetectionUnit()
 	dp.push_back(ba);
 
 
-	IplImage_Ptr testImg = cvLoadImage("E:\\project\\天宝电子\\排线检测\\testBackPic\\1.jpg");
+	IplImage_Ptr testImg = cvLoadImage("E:\\project\\天宝电子\\排线检测\\testBackPic\\2.jpg");
 	dp.Detect(testImg,dr);
 	cout << endl << dr.ErrorString << endl;
 	CPPUNIT_ASSERT_EQUAL(false,dr.IsPass);
-	/*if(!dr.IsPass)
+	if(!dr.IsPass)
 	{
 		cvNamedWindow("hello");
 		cvShowImage("hello",dr.ResultImage);
 		cvWaitKey();
 		cvDestroyWindow("hello");
-	}*/
+	}/**/
 
 
 }
@@ -690,30 +721,30 @@ void Test::Test_HardFrontDetectionUnit()
 	int result[]={1,0,0};
 	for (int i=1;i<=3;i++)
 	{
-		/*boost::format fmt("E:\\project\\天宝电子\\排线检测\\HardLock\\%d.jpg");
+		boost::format fmt("E:\\project\\天宝电子\\排线检测\\HardLock\\%d.jpg");
 		fmt % i;
 		testImg= cvLoadImage(fmt.str().c_str());
 		CPPUNIT_ASSERT(testImg);
 		cout << "\n检测图片文件" << i << ".jpg";
 		dp.Detect(testImg,dr);
 		cout << "\t------"<<dr.ErrorString;
-		if(!dr.IsPass)
+		/*if(!dr.IsPass)
 		{
 			cvNamedWindow("hello");
 			cvShowImage("hello",dr.ResultImage);
 			cvWaitKey(0);
 			cvDestroyWindow("hello");
-		}
+		}*/
 		if(result[i-1])
 			CPPUNIT_ASSERT_EQUAL(true,dr.IsPass);
 		else
-			CPPUNIT_ASSERT_EQUAL(false,dr.IsPass);*//**/
+			CPPUNIT_ASSERT_EQUAL(false,dr.IsPass);/**/
 	}
 }
 
 void Test::Test_PedestalFind()
 {
-	/*shared_ptr<ConstHeightPedestalFinder> pfa(new ConstHeightPedestalFinder);
+	shared_ptr<ConstHeightPedestalFinder> pfa(new ConstHeightPedestalFinder);
 	
 	pfa->ExpectHeight = 76;
 	pfa->ReferenceDirection = DIRECTION_FROM_TOP;
@@ -728,7 +759,7 @@ void Test::Test_PedestalFind()
 	testImg = cvLoadImage("E:\\project\\天宝电子\\排线检测\\blue\\no.jpg");
 
 	CvRect FindPedestalRect = pfa->Find(testImg);
-	CPPUNIT_ASSERT_EQUAL(pfa->ExpectHeight,FindPedestalRect.height);*/
+	CPPUNIT_ASSERT_EQUAL(pfa->ExpectHeight,FindPedestalRect.height);
 
 	/*FillRect(testImg,FindPedestalRect,CV_RGB(100,100,0));
 	
@@ -789,4 +820,58 @@ void Test::Test_md5()
 	md5.update("1234");
 	md5.update(md5.toString());
 	cout << endl << md5.toString() << endl;
+}
+
+
+
+
+
+void Test::Test_Rotate90()
+{
+	IplImage_Ptr testImg = cvLoadImage("E:\\project\\天宝电子\\排线检测\\myPic\\rotate1.jpg");
+	IplImage_Ptr rotateImg = Rotate90Clockwise(testImg);
+	cvNamedWindow("src",1);
+	cvNamedWindow("dst",1);
+	cvShowImage("src",testImg);
+	cvShowImage("dst",rotateImg);
+	cvWaitKey(0);
+
+}
+
+void Test::Test_SilkOnRight()
+{
+	shared_ptr<FrontDetectionUnit>  fdu(new FrontDetectionUnit);
+	DetectionResult dr;
+
+	fdu->PedestalPosition = PEDESTAL_ON_BOTTOM;
+	fdu->NeedRotate90 = 1;
+
+	fdu->PedestalFinder = shared_ptr<PedestalFindAlgorithm>(new SimplePedestalFinder);
+	fdu->PedestalFinder->ColorRange = Range<CvScalar>(CV_RGB(190,190,190),CV_RGB(240,240,240));
+	fdu->PedestalFinder->ScaleRange = Range<double>(3.2,3.8);
+	fdu->PedestalFinder->SizeRange = Range<int>(370,450);
+
+	fdu->Silk.ColorRange =  Range<CvScalar>(CV_RGB(190,190,190),CV_RGB(240,240,240));
+	fdu->Silk.SearchRange = Range<int>(69,92);
+	fdu->Silk.PixelCount = 250;
+
+	fdu->Lock.ColorRange = Range<CvScalar>(CV_RGB(20,20,30),CV_RGB(75,75,75));
+	fdu->Lock.PixelCount = 52;
+	fdu->Lock.SearchRange = Range<int>(3,20);
+	fdu->Lock.XOffset = 40;
+	fdu->Lock.SearchWidth = 150;
+
+	DetectionProgram dp;
+	dp.push_back(fdu);
+	IplImage_Ptr testImg;
+
+	string str("E:\\project\\天宝电子\\排线检测\\myPic\\rotate1.jpg");
+	
+	testImg= cvLoadImage(str.c_str());
+	CPPUNIT_ASSERT(testImg);
+	cout << "\n检测垂直图片文件rotate1.jpg";
+	dp.Detect(testImg,dr);
+	cout << "\t------"<<dr.ErrorString;
+	CPPUNIT_ASSERT_EQUAL(true,dr.IsPass);
+
 }

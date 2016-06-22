@@ -1,5 +1,4 @@
 #include "License.h"
-
 #include <Iphlpapi.h>
 
 #include "md5.h"

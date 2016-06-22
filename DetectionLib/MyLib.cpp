@@ -106,6 +106,23 @@ void Rotating180(const IplImage_Ptr src,IplImage_Ptr dst)
 	}
 }
 
+
+IplImage_Ptr Rotate90Clockwise(const IplImage_Ptr& src)
+{
+	IplImage_Ptr dst = cvCreateImage(cvSize(src->height,src->width),src->depth,src->nChannels);
+	cvTranspose(src,dst);
+	cvFlip(dst,dst,1);
+	return dst;
+}
+
+IplImage_Ptr Rotate90CounterClockwise(const IplImage_Ptr& src)
+{
+	IplImage_Ptr dst = cvCreateImage(cvSize(src->height,src->width),src->depth,src->nChannels);
+	cvTranspose(src,dst);
+	cvFlip(dst,dst,0);
+	return dst;
+}
+
 void FillRect( IplImage_Ptr image, const CvRect& rect, const CvScalar& color )
 {
 	assert(image->nChannels == 3);

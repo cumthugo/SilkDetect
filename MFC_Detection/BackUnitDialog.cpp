@@ -60,6 +60,7 @@ CBackUnitDialog::CBackUnitDialog(const shared_ptr<BackDetectionUnit>& bdu,CWnd* 
 	, m_BlueBoxXOffset(0)
 	, m_BlueBoxSearchWidth(0)
 	, m_BlueBoxMaxGapAround(-1)
+	, m_ImagePreProcess(FALSE)
 {
 
 }
@@ -116,6 +117,7 @@ void CBackUnitDialog::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT39, m_BlueBoxXOffset);
 	DDX_Text(pDX, IDC_EDIT41, m_BlueBoxSearchWidth);
 	DDX_Text(pDX, IDC_EDIT42, m_BlueBoxMaxGapAround);
+	DDX_Check(pDX, IDC_CHECK6, m_ImagePreProcess);
 }
 
 
@@ -246,6 +248,10 @@ BOOL CBackUnitDialog::OnInitDialog()
 
 
 	m_BlueBoxPositionRadio = m_BackDetectionUnit->PedestalPosition == PEDESTAL_ON_BOTTOM ? 0 : 1;
+	if(m_BackDetectionUnit->NeedRotate90)
+		m_BlueBoxPositionRadio += 2;
+
+	m_ImagePreProcess = m_BackDetectionUnit->PreProcess;
 
 	UpdateData(FALSE);
 
@@ -261,7 +267,8 @@ void CBackUnitDialog::OnOK()
 	m_BackDetectionUnit->Name = m_UnitName.GetString();
 	m_BackDetectionUnit->SubImageRect = cvRect(m_SubRect_x,m_SubRect_y,m_SubRect_width,m_SubRect_height);
 
-	m_BackDetectionUnit->PedestalPosition = m_BlueBoxPositionRadio == 0 ? PEDESTAL_ON_BOTTOM : PEDESTAL_ON_TOP;
+	m_BackDetectionUnit->NeedRotate90 = m_BlueBoxPositionRadio >= 2 ? 1 : 0;
+	m_BackDetectionUnit->PedestalPosition = (m_BlueBoxPositionRadio == 0 || m_BlueBoxPositionRadio == 2) ? PEDESTAL_ON_BOTTOM : PEDESTAL_ON_TOP;
 
 	//这里要新建
 	if(m_bIsPedestalConstHeight)
@@ -304,7 +311,7 @@ void CBackUnitDialog::OnOK()
 		m_BackDetectionUnit->Lock.ColorRange = Range<CvScalar>(CV_RGB(m_LockColorMin_R,m_LockColorMin_G,m_LockColorMin_B),CV_RGB(m_LockColorMax_R,m_LockColorMax_G,m_LockColorMax_B));
 	m_BackDetectionUnit->Lock.SearchRange = Range<int>(m_LockSearchMin,m_LockSearchMax);
 	m_BackDetectionUnit->Lock.PixelCount = m_LockPixelCount;
-
+	m_BackDetectionUnit->PreProcess = m_ImagePreProcess;
 	CDialog::OnOK();
 }
 

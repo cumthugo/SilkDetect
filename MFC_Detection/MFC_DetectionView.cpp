@@ -24,7 +24,7 @@
 #include "../DetectionLib/License.h"
 
 
-//opencv_contrib244.lib;opencv_core244.lib;opencv_features2d244.lib;opencv_flann244.lib;opencv_gpu244.lib;opencv_highgui244.lib;opencv_imgproc244.lib;opencv_legacy244.lib;opencv_ml244.lib;opencv_objdetect244.lib;opencv_ts244.lib;opencv_video244.lib;
+
 #ifdef _DEBUG
 #pragma comment(lib,"cxcore200d.lib")
 #pragma comment(lib,"cv200d.lib")
@@ -109,25 +109,6 @@ void CMFC_DetectionView::OnInitialUpdate()
 	//ResizeParentToFit();
 
 
-	//读取配置文件
-	int comPort = ::GetPrivateProfileInt("COM","Port",1,".\\Config.ini");
-	CString StrPort;
-	StrPort.Format("COM%d",comPort);
-	while(!gCommObject.ConnectComm(StrPort))
-	{
-		if(++comPort > 10)
-		{
-			MessageBox("串口打开失败！","排线装配检测软件",MB_OK | MB_ICONERROR);
-			return;
-		}
-		StrPort.Format("COM%d",comPort);
-	}
-	StrPort.Format("%d",comPort);
-	::WritePrivateProfileString("COM","Port",StrPort,".\\Config.ini");
-	//打开串口成功，开始接受数据
-	gCommObject.SetClientWnd(m_hWnd);
-	gCommObject.StartReceive();
-
 	UpdateData(FALSE);
 
 	m_editFont.CreatePointFont(200,"宋体");
@@ -156,7 +137,7 @@ void CMFC_DetectionView::OnInitialUpdate()
 	}
 	catch (...)
 	{
-		MessageBox("读取检测参数失败","排线装配检测软件",MB_OK | MB_ICONERROR);
+		MessageBox("读取检测参数失败");
 	}
 	try
 	{
@@ -177,6 +158,25 @@ void CMFC_DetectionView::OnInitialUpdate()
 	catch (...)
 	{
 	}
+
+	//读取配置文件
+	int comPort = ::GetPrivateProfileInt("COM","Port",1,".\\Config.ini");
+	CString StrPort;
+	StrPort.Format("COM%d",comPort);
+	while(!gCommObject.ConnectComm(StrPort))
+	{
+		if(++comPort > 10)
+		{
+			MessageBox("串口打开失败！");
+			return;
+		}
+		StrPort.Format("COM%d",comPort);
+	}
+	StrPort.Format("%d",comPort);
+	::WritePrivateProfileString("COM","Port",StrPort,".\\Config.ini");
+	//打开串口成功，开始接受数据
+	gCommObject.SetClientWnd(m_hWnd);
+	gCommObject.StartReceive();
 }
 
 
@@ -255,7 +255,7 @@ bool CMFC_DetectionView::Detect( IplImage_Ptr img ,shared_ptr<DetectionProgram> 
 
 shared_ptr<DetectionProgram> CMFC_DetectionView::GetDetectionProgram()
 {	
-	
+
 	return m_FirstProgram;
 }
 

@@ -26,13 +26,14 @@ public:
 	CvRect SubImageRect;
 	//Position
 	int PedestalPosition;
+	int PreProcess; //预处理
+	int NeedRotate90; //用于检测垂直方向上的排线,采用顺时针旋转 added 2.1.11 2014/1/16
 
 protected:
 	enum ScanDirection { SCAN_FROM_BOTTOM = 0, SCAN_FROM_TOP = 1};
 	enum { DETECT_FLAG_APPEAR = 0, DETECT_FLAG_DISAPPEAR = 1};
-	CvRect DetectObject(const IplImage_Ptr sourceImage,const Range<CvScalar>& colorRange, const Range<double>& scaleRange, const Range<int>& sizeRange);
 	
-	DetectionUnit():SubImageRect(cvRect(0,0,0,0)){}
-	DetectionUnit(const string& Name):NamedItem(Name),SubImageRect(cvRect(0,0,0,0)){}
+	DetectionUnit():SubImageRect(cvRect(0,0,0,0)),PreProcess(0),NeedRotate90(0){}
+	DetectionUnit(const string& Name):NamedItem(Name),SubImageRect(cvRect(0,0,0,0)),PreProcess(0){}
 	virtual void DetectAlgorithm(const IplImage_Ptr sourceImage,const CvRect& PedestalRect,DetectionResult& result) = 0;
 };

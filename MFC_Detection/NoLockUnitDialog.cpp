@@ -45,6 +45,7 @@ CNoLockUnitDialog::CNoLockUnitDialog(const shared_ptr<NoLockDetectionUnit>& nld,
 	, m_SilkXOffset(0)
 	, m_SilkSearchWidth(0)
 	, m_SilkMaxGapAround(-1)
+	, m_ImagePreProcess(FALSE)
 {
 
 }
@@ -91,6 +92,7 @@ void CNoLockUnitDialog::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT39, m_SilkXOffset);
 	DDX_Text(pDX, IDC_EDIT41, m_SilkSearchWidth);
 	DDX_Text(pDX, IDC_EDIT42, m_SilkMaxGapAround);
+	DDX_Check(pDX, IDC_CHECK6, m_ImagePreProcess);
 }
 
 
@@ -188,6 +190,9 @@ BOOL CNoLockUnitDialog::OnInitDialog()
 	m_SilkMaxGapAround = m_NoLockDetectionUnit->Silk.MaxGapAround;
 
 	m_SilkPositionSelectRadio = m_NoLockDetectionUnit->PedestalPosition == PEDESTAL_ON_BOTTOM ? 0 : 1;
+	if(m_NoLockDetectionUnit->NeedRotate90)
+		m_SilkPositionSelectRadio += 2;
+	m_ImagePreProcess = m_NoLockDetectionUnit->PreProcess;
 	UpdateData(FALSE);
 	return TRUE;  
 }
@@ -199,7 +204,8 @@ void CNoLockUnitDialog::OnOK()
 
 	m_NoLockDetectionUnit->Name = m_UnitName.GetString();
 
-	m_NoLockDetectionUnit->PedestalPosition = m_SilkPositionSelectRadio == 0 ? PEDESTAL_ON_BOTTOM : PEDESTAL_ON_TOP;
+	m_NoLockDetectionUnit->NeedRotate90 = m_SilkPositionSelectRadio >= 2 ? 1 : 0;
+	m_NoLockDetectionUnit->PedestalPosition = (m_SilkPositionSelectRadio == 0 || m_SilkPositionSelectRadio == 2) ? PEDESTAL_ON_BOTTOM : PEDESTAL_ON_TOP;
 
 	//这里要新建
 	if(m_bIsPedestalConstHeight)
@@ -232,6 +238,7 @@ void CNoLockUnitDialog::OnOK()
 	m_NoLockDetectionUnit->Silk.SearchRange = Range<int>(m_SilkSearchMin,m_SilkSearchMax);
 	m_NoLockDetectionUnit->Silk.PixelCount = m_SilkPixelCount;
 
+	m_NoLockDetectionUnit->PreProcess = m_ImagePreProcess;
 
 	//new add
 	m_NoLockDetectionUnit->Silk.XOffset = m_SilkXOffset;

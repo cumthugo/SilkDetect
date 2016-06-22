@@ -53,6 +53,7 @@
 #define IDC_EDIT23                      1027
 #define IDC_RADIO1                      1028
 #define IDC_EDIT25                      1029
+#define IDC_RADIO9                      1029
 #define IDC_EDIT26                      1030
 #define IDC_EDIT27                      1031
 #define IDC_EDIT28                      1032
@@ -63,6 +64,7 @@
 #define IDC_EDIT33                      1037
 #define IDC_RADIO2                      1038
 #define IDC_EDIT35                      1039
+#define IDC_RADIO6                      1039
 #define IDC_CHECK1                      1040
 #define IDC_CHECK2                      1041
 #define IDC_CHECK3                      1042
@@ -82,6 +84,9 @@
 #define IDC_EDIT39                      1051
 #define IDC_EDIT41                      1052
 #define IDC_EDIT42                      1053
+#define IDC_CHECK6                      1054
+#define IDC_RADIO7                      1055
+#define IDC_RADIO8                      1056
 #define ID_32771                        32771
 #define ID_32772                        32772
 #define ID_32773                        32773
@@ -104,9 +109,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        319
+#define _APS_NEXT_RESOURCE_VALUE        332
 #define _APS_NEXT_COMMAND_VALUE         32797
-#define _APS_NEXT_CONTROL_VALUE         1050
+#define _APS_NEXT_CONTROL_VALUE         1055
 #define _APS_NEXT_SYMED_VALUE           310
 #endif
 #endif

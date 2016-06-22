@@ -1,5 +1,80 @@
 #include "PedestalFindAlgorithm.hpp"
+void DrawBox(CvBox2D box,IplImage_Ptr img,CvScalar color = CV_RGB(0,0,255)) 
+{ 
+	CvPoint2D32f point[4]; 
+	int i; 
+	for ( i=0; i<4; i++) 
+	{ 
+		point[i].x = 0; 
+		point[i].y = 0; 
+	}
+	cvBoxPoints(box, point); //计算二维盒子顶点 
+	CvPoint pt[4]; 
+	for ( i=0; i<4; i++) 
+	{ 
+		pt[i].x = cvRound(point[i].x); 
+		pt[i].y = cvRound(point[i].y); 
+	} 
+	cvLine( img, pt[0], pt[1],color); 
+	cvLine( img, pt[1], pt[2],color); 
+	cvLine( img, pt[2], pt[3],color); 
+	cvLine( img, pt[3], pt[0],color); 
+} 
+void PedestalFindAlgorithm::ProcessInclined( IplImage_Ptr& sourceImage )
+{
+	IplImage_Ptr dizuoImage = cvCreateImage(cvGetSize(sourceImage),IPL_DEPTH_8U,1);
+	ThreshColorImage(sourceImage,dizuoImage,ColorRange);
 
+	CvMemStorage* storage = cvCreateMemStorage(0);
+	CvSeq* contours = 0;
+	cvFindContours(dizuoImage,storage,&contours,sizeof(CvContour),CV_RETR_TREE,CV_CHAIN_APPROX_SIMPLE);
+
+	for(;contours;contours = contours->h_next)
+	{
+		CvBox2D box;
+		CvRect rect;
+		int& count = contours->total; 
+
+		if( count < 5 )
+			continue;
+
+		CvMat* points_f = cvCreateMat( 1, count, CV_32FC2 );
+		CvMat points_i = cvMat( 1, count, CV_32SC2, points_f->data.ptr );
+		cvCvtSeqToArray( contours, points_f->data.ptr, CV_WHOLE_SEQ );
+		cvConvert( &points_i, points_f );
+
+		box = cvMinAreaRect2(points_f);
+		rect = cvBoundingRect(points_f);
+		cvReleaseMat(&points_f);
+
+		//这里需要裁剪
+		CutBox(sourceImage, rect);
+		double scale = (double)rect.width / rect.height;
+		int size = rect.width;
+		if(ScaleRange.IsInRange(scale) && SizeRange.IsInRange(size))		
+		{	
+			float angle = box.angle > 20 ? box.angle - 90 : box.angle;
+			CvMat* rot_mat = cvCreateMat(2,3,CV_32FC1);
+			cv2DRotationMatrix(box.center,-angle,1.0,rot_mat);
+			IplImage_Ptr dst = cvCreateImage(cvGetSize(sourceImage),IPL_DEPTH_8U,3);
+			cvWarpAffine(sourceImage,dst,rot_mat);
+			cvCopy(dst,sourceImage);
+			/*
+			DrawBox(box,sourceImage);
+			cvNamedWindow("orign",1);
+			cvShowImage("orign",sourceImage);
+			
+			//
+			
+			cvNamedWindow("current",1);
+			cvShowImage("current",sourceImage);
+			cvWaitKey();
+			cvDestroyAllWindows();*/
+			cvReleaseMat(&rot_mat);
+			return;
+		}
+	}
+}
 
 CvRect PedestalFindAlgorithm::DetectObject( const IplImage_Ptr sourceImage)
 {
@@ -133,51 +208,6 @@ CvRect SimplePedestalFinder::Find( const IplImage_Ptr sourceImage)
 CvRect InclinedPedestalFinder::Find( const IplImage_Ptr sourceImage )
 {
 	return DetectObject(sourceImage);
-}
-
-CvRect InclinedPedestalFinder::DetectObject( const IplImage_Ptr sourceImage )
-{
-	IplImage_Ptr dizuoImage = cvCreateImage(cvGetSize(sourceImage),IPL_DEPTH_8U,1);
-	ThreshColorImage(sourceImage,dizuoImage,ColorRange);
-
-
-	CvMemStorage* storage = cvCreateMemStorage(0);
-	CvSeq* contours = 0;
-	cvFindContours(dizuoImage,storage,&contours,sizeof(CvContour),CV_RETR_TREE,CV_CHAIN_APPROX_SIMPLE);
-
-	for(;contours;contours = contours->h_next)
-	{
-		CvBox2D box;
-		CvRect rect = cvRect(0,0,0,0);
-		int& count = contours->total; 
-
-		if( count < 5 )
-			continue;
-
-		CvMat* points_f = cvCreateMat( 1, count, CV_32FC2 );
-		CvMat points_i = cvMat( 1, count, CV_32SC2, points_f->data.ptr );
-		cvCvtSeqToArray( contours, points_f->data.ptr, CV_WHOLE_SEQ );
-		cvConvert( &points_i, points_f );
-
-		box = cvMinAreaRect2(points_f);
-		cvReleaseMat(&points_f);
-		double scale = (double)box.size.width/ box.size.height;
-		int size = (int)box.size.width;
-		if(ScaleRange.IsInRange(scale) && SizeRange.IsInRange(size))		
-		{	
-			float angle = box.angle - 90;
-			CvMat* rot_mat = cvCreateMat(2,3,CV_32FC1);
-			cv2DRotationMatrix(box.center,-angle,1.0,rot_mat);
-			IplImage_Ptr dst = cvCreateImage(cvGetSize(sourceImage),IPL_DEPTH_8U,3);
-			cvWarpAffine(sourceImage,dst,rot_mat);
-			cvNamedWindow("haha",1);
-			cvShowImage("haha",dst);
-			cvWaitKey();
-			cvReleaseMat(&rot_mat);
-			return rect;
-		}
-	}
-	return cvRect(0,0,0,0);
 }
 
 

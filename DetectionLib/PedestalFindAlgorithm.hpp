@@ -9,6 +9,7 @@ public:
 	virtual ~PedestalFindAlgorithm(){}
 	PedestalFindAlgorithm():XLeastPointNumber(5),YLeastPointNumber(0){}
 	virtual CvRect Find(const IplImage_Ptr sourceImage) = 0;
+	void ProcessInclined(IplImage_Ptr& sourceImage);
 
 //for test
 public:
@@ -49,9 +50,6 @@ public:
 	int GetTypeId() const { return TYPE_ID;}
 	enum { TYPE_ID = 3};
 	CvRect Find(const IplImage_Ptr sourceImage);
-protected:
-	//内部公共方法
-	CvRect DetectObject(const IplImage_Ptr sourceImage);
 };
 
 #define DIRECTION_FROM_TOP 1

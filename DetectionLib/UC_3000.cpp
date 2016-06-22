@@ -1,9 +1,7 @@
 #include "UC_3000.hpp"
 
-
-
-#include "HVDAILT.h"
-#include "Raw2Rgb.h"
+#include "uc3000/HVDAILT.h"
+#include "uc3000/Raw2Rgb.h"
 
 //定义自己的0
 #define  MY_ZERO 0.000000001

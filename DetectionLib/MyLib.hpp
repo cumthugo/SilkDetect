@@ -135,6 +135,8 @@ public:
 //Œ“µƒÀ„∑®
 void ThreshColorImage(const IplImage_Ptr src,IplImage_Ptr dst,const Range<CvScalar>& colorRange);
 void Rotating180(const IplImage_Ptr src,IplImage_Ptr dst);
+IplImage_Ptr Rotate90Clockwise(const IplImage_Ptr& src);
+IplImage_Ptr Rotate90CounterClockwise(const IplImage_Ptr& src);
 void FillRect(IplImage_Ptr image, const CvRect& rect, const CvScalar& color);
 void RestrictRect(CvRect& targetRect,const CvRect& refRect);
 int XColorCount(const IplImage_Ptr sourceImage, const Range<CvScalar>& colorRange, int x, int y, int width);

@@ -75,4 +75,5 @@ public:
 	int m_BlueBoxXOffset;
 	int m_BlueBoxSearchWidth;
 	int m_BlueBoxMaxGapAround;
+	BOOL m_ImagePreProcess;
 };

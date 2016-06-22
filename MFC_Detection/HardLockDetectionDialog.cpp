@@ -59,6 +59,7 @@ CHardLockDetectionDialog::CHardLockDetectionDialog(const shared_ptr<HardLockDete
 	, m_SilkXOffset(0)
 	, m_SilkSearchWidth(0)
 	, m_SilkMaxGapAround(-1)
+	, m_ImagePreProcess(FALSE)
 {
 
 }
@@ -117,6 +118,7 @@ void CHardLockDetectionDialog::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT39, m_SilkXOffset);
 	DDX_Text(pDX, IDC_EDIT41, m_SilkSearchWidth);
 	DDX_Text(pDX, IDC_EDIT42, m_SilkMaxGapAround);
+	DDX_Check(pDX, IDC_CHECK6, m_ImagePreProcess);
 }
 
 
@@ -247,7 +249,9 @@ BOOL CHardLockDetectionDialog::OnInitDialog()
 	m_LockSearchWidth = m_HardLockDetectionUnit->Lock.SearchWidth;
 
 	m_SilkPositionSelectRadio = m_HardLockDetectionUnit->PedestalPosition == PEDESTAL_ON_BOTTOM ? 0 : 1;
-
+	if(m_HardLockDetectionUnit->NeedRotate90)
+		m_SilkPositionSelectRadio += 2;
+	m_ImagePreProcess = m_HardLockDetectionUnit->PreProcess;
 	UpdateData(FALSE);
 	return TRUE; 
 }
@@ -259,7 +263,8 @@ void CHardLockDetectionDialog::OnOK()
 
 	m_HardLockDetectionUnit->Name = m_UnitName.GetString();
 
-	m_HardLockDetectionUnit->PedestalPosition = m_SilkPositionSelectRadio == 0 ? PEDESTAL_ON_BOTTOM : PEDESTAL_ON_TOP;
+	m_HardLockDetectionUnit->NeedRotate90 = m_SilkPositionSelectRadio >= 2 ? 1 : 0;
+	m_HardLockDetectionUnit->PedestalPosition = (m_SilkPositionSelectRadio == 0 || m_SilkPositionSelectRadio == 2) ? PEDESTAL_ON_BOTTOM : PEDESTAL_ON_TOP;
 
 	//这里要新建
 	if(m_bIsPedestalConstHeight)
@@ -305,6 +310,7 @@ void CHardLockDetectionDialog::OnOK()
 	m_HardLockDetectionUnit->Lock.PixelCount = m_LockPixelCount;
 	m_HardLockDetectionUnit->Lock.XOffset = m_LockXOffset;
 	m_HardLockDetectionUnit->Lock.SearchWidth = m_LockSearchWidth;
+	m_HardLockDetectionUnit->PreProcess = m_ImagePreProcess;
 	CDialog::OnOK();
 }
 

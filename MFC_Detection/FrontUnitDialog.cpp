@@ -59,6 +59,7 @@ CFrontUnitDialog::CFrontUnitDialog(const shared_ptr<FrontDetectionUnit>& fdu,CWn
 	, m_SilkXOffset(0)
 	, m_SilkSearchWidth(0)
 	, m_SilkMaxGapAround(-1)
+	, m_ImagePreProcess(FALSE)
 {
 
 }
@@ -117,6 +118,7 @@ void CFrontUnitDialog::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT39, m_SilkXOffset);
 	DDX_Text(pDX, IDC_EDIT41, m_SilkSearchWidth);
 	DDX_Text(pDX, IDC_EDIT42, m_SilkMaxGapAround);
+	DDX_Check(pDX, IDC_CHECK6, m_ImagePreProcess);
 }
 
 
@@ -249,6 +251,9 @@ BOOL CFrontUnitDialog::OnInitDialog()
 	m_LockSearchWidth = m_FrontDetectionUnit->Lock.SearchWidth;
 
 	m_SilkPositionSelectRadio = m_FrontDetectionUnit->PedestalPosition == PEDESTAL_ON_BOTTOM ? 0 : 1;
+	if(m_FrontDetectionUnit->NeedRotate90)
+		m_SilkPositionSelectRadio += 2;
+	m_ImagePreProcess = m_FrontDetectionUnit->PreProcess;
 	
 	UpdateData(FALSE);
 
@@ -266,7 +271,8 @@ void CFrontUnitDialog::OnOK()
 
 	m_FrontDetectionUnit->Name = m_UnitName.GetString();
 
-	m_FrontDetectionUnit->PedestalPosition = m_SilkPositionSelectRadio == 0 ? PEDESTAL_ON_BOTTOM : PEDESTAL_ON_TOP;
+	m_FrontDetectionUnit->NeedRotate90 = m_SilkPositionSelectRadio >= 2 ? 1 : 0;
+	m_FrontDetectionUnit->PedestalPosition = (m_SilkPositionSelectRadio == 0 || m_SilkPositionSelectRadio == 2) ? PEDESTAL_ON_BOTTOM : PEDESTAL_ON_TOP;
 
 	//这里要新建
 	if(m_bIsPedestalConstHeight)
@@ -314,6 +320,7 @@ void CFrontUnitDialog::OnOK()
 	m_FrontDetectionUnit->Lock.PixelCount = m_LockPixelCount;
 	m_FrontDetectionUnit->Lock.XOffset = m_LockXOffset;
 	m_FrontDetectionUnit->Lock.SearchWidth = m_LockSearchWidth;
+	m_FrontDetectionUnit->PreProcess = m_ImagePreProcess;
 	CDialog::OnOK();
 }
 

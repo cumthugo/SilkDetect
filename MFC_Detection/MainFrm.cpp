@@ -59,7 +59,7 @@ BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
 		return FALSE;
 	// TODO: 在此处通过修改
 	//  CREATESTRUCT cs 来修改窗口类或样式
-	m_strTitle = _T("排线装配检测软件");
+	m_strTitle = _T("排线检测程序");
 	cs.style &= ~(LONG) FWS_ADDTOTITLE;
 	return TRUE;
 }

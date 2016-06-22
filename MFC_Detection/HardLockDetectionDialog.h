@@ -77,4 +77,5 @@ public:
 	int m_SilkXOffset;
 	int m_SilkSearchWidth;
 	int m_SilkMaxGapAround;
+	BOOL m_ImagePreProcess;
 };
