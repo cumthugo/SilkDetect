@@ -1,7 +1,7 @@
 #pragma once
 
 #include "DetectionUnit.hpp"
-
+#include "ScreenShot.h"
 
 class DetectionProgram : public list<shared_ptr<DetectionUnit> >, public NamedItem
 {
@@ -18,6 +18,10 @@ public:
 	void UpItem(iterator pos);
 
 	void Detect(IplImage_Ptr sourceImage,DetectionResult& result);
+
+	//add in 2015/04/28
+	void SetScreenShot(const string& folderPath, int N){ itsScreenShot.Init(folderPath,N);}
+	ScreenShot itsScreenShot;
 };
 
 

@@ -33,6 +33,8 @@ void DetectionProgram::Detect( IplImage_Ptr sourceImage,DetectionResult& result 
 		DetectionResult dr;
 		da->Detect(subImage,dr);
 
+		itsScreenShot.Save(da->Name,subImage,da); //add in 2015/4/28
+
 		if(!dr.IsPass)
 		{
 			result.IsPass = dr.IsPass;
