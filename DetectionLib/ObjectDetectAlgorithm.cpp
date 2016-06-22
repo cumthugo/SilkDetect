@@ -1,5 +1,6 @@
 #include "ObjectDetectAlgorithm.hpp"
 #include <vector>
+#include <cmath>
 
 #define OBJECT_NOT_FIND -1
 
@@ -38,6 +39,7 @@ bool ObjectDetectAlgorithm::isObjectInRect( const IplImage_Ptr sourceImage, cons
 	return ObjectChangePosition(sourceImage,detectRect,colorRange,objectWidth,scanDirection,detectFlag) != OBJECT_NOT_FIND;
 }
 
+#define PI 3.14159265358979323846
 
 void CommonSilkDetectAlgorithm::Detect( const IplImage_Ptr sourceImage,const CvRect& PedestalRect,int PedestalPosition,DetectionResult& result )
 {
@@ -68,10 +70,51 @@ void CommonSilkDetectAlgorithm::Detect( const IplImage_Ptr sourceImage,const CvR
 		FillRect(result.ResultImage,RightSilkRect,CV_RGB(100,0,0));
 		return;
 	}
-	//¼ì²â×óÓÒµÄ²î¾à
-	if(MaxGapAround >= 0)
+	//¼ì²â×óÓÒµÄ²î¾à,»»ËãÎª½Ç¶È
+	if(MaxGapAround > 0)
 	{
-		if(abs(Object_Left_y-Object_Right_y) > MaxGapAround)
+
+		vector<CvPoint> Arrs;
+		int step = width / 10;
+
+		for (int i=0;i<11;i++)
+		{
+			CvRect LeftPointRect = cvRect(x+i*step,Silk_y,3,Silk_height);
+			int LeftPoint_y = ObjectChangePosition(sourceImage,LeftPointRect,ColorRange,1,SilkScanDir,DetectFlag);
+			if(LeftPoint_y != OBJECT_NOT_FIND)
+				Arrs.push_back(cvPoint(x+i*step,LeftPoint_y));
+		}
+
+		if(Arrs.size()<2)
+		{
+			result.ErrorString = ResultFactory::GetInstance()->GetSilkErrorString();
+			FillRect(result.ResultImage,LeftSilkRect,CV_RGB(100,0,0));
+			FillRect(result.ResultImage,RightSilkRect,CV_RGB(100,0,0));
+			return;
+		}
+
+		CvPoint first_point = Arrs[0];
+		CvPoint last_point = Arrs[Arrs.size()-1];
+
+
+		int gap;
+		int len;
+
+		//here to calc gap and len
+		gap = abs(last_point.y - first_point.y);
+		len = abs(last_point.x - first_point.x);
+
+		if(len<=0)
+		{
+			result.ErrorString = ResultFactory::GetInstance()->GetSilkErrorString();
+			FillRect(result.ResultImage,LeftSilkRect,CV_RGB(100,0,0));
+			FillRect(result.ResultImage,RightSilkRect,CV_RGB(100,0,0));
+			return;
+		}
+		double angle = atan(double(gap/len));
+		angle = angle * 180 / PI;
+
+		if( angle > MaxGapAround)
 		{
 			result.ErrorString = ResultFactory::GetInstance()->GetSilkErrorString();
 			FillRect(result.ResultImage,LeftSilkRect,CV_RGB(100,0,0));

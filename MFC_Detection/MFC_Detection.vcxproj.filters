@@ -63,6 +63,9 @@
     <ClCompile Include="RegLisenseDialog.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="WorkIdDialog.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BackUnitDialog.h">
@@ -117,6 +120,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="RegLisenseDialog.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="WorkIdDialog.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CSpreadSheet.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

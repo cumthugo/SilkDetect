@@ -15,6 +15,7 @@
 #include "SelectProgramDialog.h"
 #include "Comm.h"
 #include "RegLisenseDialog.h"
+#include "WorkIdDialog.h"
 
 #include "../DetectionLib/FrontDetectionUnit.hpp"
 #include "../DetectionLib/BackDetectionUnit.hpp"
@@ -463,30 +464,36 @@ LRESULT CMFC_DetectionView::OnCommProc( WPARAM wParam, LPARAM lParam )
 		{						
 			m_startTimer = std::time(NULL); //anyway, start time from here
 			DetectionResult dr = Detect(img,GetDetectionProgram());
+
+			if(!dr.IsPass)			
+				ManualJudge(dr);
+
 			if(dr.IsPass)
 				gCommObject.SendCommData(0x01);
 			else
 				gCommObject.SendCommData(0x02);
-			if(HasSecondStep())
-			{
-				itsFirstSteprReport = dr.Report;	
-				itsFirstResult = dr.IsPass;
-			}
-			else
+			
+			itsFirstSteprReport = dr.Report;	
+			itsFirstResult = dr.IsPass;
+
+			if(!HasSecondStep() || !dr.IsPass)
 			{
 				m_stopTimer = std::time(NULL);
 				//输出report, 
 				WriteReport(dr);
-			}	
+			}
 		}
 		else if(cmd == 0xA1)
 		{			
 			DetectionResult dr = Detect(img,m_SecondProgram);
+			if(!dr.IsPass)
+				ManualJudge(dr);
+
 			if(dr.IsPass)
 				gCommObject.SendCommData(0x01);
-			else
+			else			
 				gCommObject.SendCommData(0x02);
-
+			
 			//sure has second step,
 			std::copy(itsFirstSteprReport.rbegin(),itsFirstSteprReport.rend(),front_inserter(dr.Report)); // insert first result
 			dr.IsPass = dr.IsPass & itsFirstResult;
@@ -652,6 +659,36 @@ void CMFC_DetectionView::WriteReport(DetectionResult& dr)
 bool CMFC_DetectionView::HasSecondStep()
 {
 	return m_SecondProgram->Name != "";
+}
+
+void CMFC_DetectionView::ManualJudge( DetectionResult &dr )
+{
+	//增加人工判断流程
+	static CWorkIdDialog dlg;
+	Clock_MS cl;
+	cl.Start();
+	if(MessageBox("请人工检查是否安装正确！","人工确认",MB_YESNO | MB_ICONQUESTION ) == IDYES)
+	{
+		if(dlg.DoModal() == IDOK)
+		{
+			cl.Stop();
+			dr.IsPass = true;					
+			dr.AddItemReport(GetDetectionProgram()->Name,"ManualCheck",true,cl.GetTime());
+			dr.ErrorString = "人工检查通过！";
+			ShowResult(dr);
+		}
+		else
+		{
+			cl.Stop();									
+			dr.AddItemReport(GetDetectionProgram()->Name,"ManualCheckCancel",false,cl.GetTime());
+		}
+		
+	}
+	else
+	{
+		cl.Stop();									
+		dr.AddItemReport(GetDetectionProgram()->Name,"ManualCheck",false,cl.GetTime());
+	}
 }
 
 

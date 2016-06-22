@@ -70,6 +70,9 @@ public:
 	afx_msg void OnBnClickedGetPic();
 
 	afx_msg LRESULT OnCommProc(WPARAM wParam, LPARAM lParam);
+
+	void ManualJudge( DetectionResult &dr );
+
 	CString m_ErrorString;
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnPaint();

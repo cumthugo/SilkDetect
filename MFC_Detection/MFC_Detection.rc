@@ -264,8 +264,9 @@ BEGIN
     EDITTEXT        IDC_EDIT39,134,231,26,12,ES_AUTOHSCROLL
     LTEXT           "检测长度",IDC_STATIC,164,233,33,8
     EDITTEXT        IDC_EDIT41,198,231,26,12,ES_AUTOHSCROLL
-    LTEXT           "左右偏差",IDC_STATIC,231,232,33,8
-    EDITTEXT        IDC_EDIT42,267,230,26,12,ES_AUTOHSCROLL
+    LTEXT           "最大倾角",IDC_STATIC,231,232,33,8
+    EDITTEXT        IDC_EDIT42,267,230,18,12,ES_AUTOHSCROLL
+    LTEXT           "°",IDC_STATIC,290,232,8,8
 END
 
 IDD_BACK_UNIT_DIALOG DIALOGEX 0, 0, 311, 360
@@ -342,7 +343,7 @@ BEGIN
     LTEXT           "到",IDC_STATIC,95,140,9,8
     LTEXT           "长度从",IDC_STATIC,195,140,25,8
     LTEXT           "到",IDC_STATIC,253,140,9,8
-    GROUPBOX        "蓝色边框",IDC_STATIC,12,193,284,71
+    GROUPBOX        "蓝色边框",IDC_STATIC,12,193,292,71
     LTEXT           "颜色从",IDC_STATIC,21,210,25,8
     LTEXT           "到",IDC_STATIC,166,210,9,8
     LTEXT           "检测区域离底座的距离从",IDC_STATIC,21,229,89,8
@@ -375,8 +376,9 @@ BEGIN
     EDITTEXT        IDC_EDIT39,134,245,26,12,ES_AUTOHSCROLL
     LTEXT           "检测长度",IDC_STATIC,164,247,33,8
     EDITTEXT        IDC_EDIT41,198,245,26,12,ES_AUTOHSCROLL
-    LTEXT           "左右偏差",IDC_STATIC,231,246,33,8
-    EDITTEXT        IDC_EDIT42,267,244,26,12,ES_AUTOHSCROLL
+    LTEXT           "最大倾角",IDC_STATIC,231,246,33,8
+    EDITTEXT        IDC_EDIT42,267,244,23,12,ES_AUTOHSCROLL
+    LTEXT           "°",IDC_STATIC,294,246,8,8
 END
 
 IDD_HARD_LOCK_UNIT_DIALOG DIALOGEX 0, 0, 313, 356
@@ -490,8 +492,9 @@ BEGIN
     EDITTEXT        IDC_EDIT39,134,242,26,12,ES_AUTOHSCROLL
     LTEXT           "检测长度",IDC_STATIC,164,244,33,8
     EDITTEXT        IDC_EDIT41,198,242,26,12,ES_AUTOHSCROLL
-    LTEXT           "左右偏差",IDC_STATIC,231,243,33,8
-    EDITTEXT        IDC_EDIT42,267,241,26,12,ES_AUTOHSCROLL
+    LTEXT           "最大倾角",IDC_STATIC,231,243,33,8
+    EDITTEXT        IDC_EDIT42,267,241,22,12,ES_AUTOHSCROLL
+    LTEXT           "°",IDC_STATIC,294,243,8,8
 END
 
 IDD_FRONT2_UNIT_DIALOG DIALOGEX 0, 0, 310, 353
@@ -605,8 +608,9 @@ BEGIN
     EDITTEXT        IDC_EDIT39,134,242,26,12,ES_AUTOHSCROLL
     LTEXT           "检测长度",IDC_STATIC,164,244,33,8
     EDITTEXT        IDC_EDIT41,198,242,26,12,ES_AUTOHSCROLL
-    LTEXT           "左右偏差",IDC_STATIC,231,243,33,8
-    EDITTEXT        IDC_EDIT42,267,241,26,12,ES_AUTOHSCROLL
+    LTEXT           "最大倾角",IDC_STATIC,231,243,33,8
+    EDITTEXT        IDC_EDIT42,267,241,21,12,ES_AUTOHSCROLL
+    LTEXT           "°",IDC_STATIC,290,243,8,8
 END
 
 IDD_PASSWORD_DIALOG DIALOGEX 0, 0, 216, 58
@@ -659,6 +663,17 @@ BEGIN
     LTEXT           "注册密码：",IDC_STATIC,13,18,41,8
 END
 
+IDD_DLG_WORK_ID DIALOGEX 0, 0, 206, 60
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "编号输入："
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_EDIT1,98,14,88,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "确定",IDOK,47,39,50,14
+    PUSHBUTTON      "取消",IDCANCEL,128,39,50,14
+    LTEXT           "请输入班组长编号：",IDC_STATIC,25,17,73,8
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -666,8 +681,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2,3,3,1
- PRODUCTVERSION 2,3,3,1
+ FILEVERSION 2,3,3,4
+ PRODUCTVERSION 2,3,3,4
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -684,12 +699,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "中国矿业大学"
             VALUE "FileDescription", "排线检测软件"
-            VALUE "FileVersion", "2.3.3.1"
+            VALUE "FileVersion", "2.3.3.4"
             VALUE "InternalName", "MFC_Detection.exe"
             VALUE "LegalCopyright", "CUMT(C) 中国矿业大学。保留所有权利。"
             VALUE "OriginalFilename", "MFC_Detection.exe"
             VALUE "ProductName", "排线检测软件"
-            VALUE "ProductVersion", "2.3.3.1"
+            VALUE "ProductVersion", "2.3.3.4"
         END
     END
     BLOCK "VarFileInfo"
@@ -801,6 +816,14 @@ BEGIN
         RIGHTMARGIN, 209
         TOPMARGIN, 7
         BOTTOMMARGIN, 51
+    END
+
+    IDD_DLG_WORK_ID, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 199
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 53
     END
 END
 #endif    // APSTUDIO_INVOKED
