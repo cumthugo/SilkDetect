@@ -209,10 +209,10 @@ CMFC_DetectionDoc* CMFC_DetectionView::GetDocument() const // 非调试版本是内联的
 
 // CMFC_DetectionView 消息处理程序
 void CMFC_DetectionView::OnBnClickedGetPic()
-{
-	ForNextNumberInput();
+{	
 	IplImage_Ptr img = cvLoadImage("d:\\test.jpg");
 	Detect(img,GetDetectionProgram());
+	
 	
 }
 void CMFC_DetectionView::OnBnClickedGetPic2()
@@ -242,35 +242,31 @@ bool CMFC_DetectionView::Detect( IplImage_Ptr img ,shared_ptr<DetectionProgram> 
 				{
 					dp->Detect(img,dr);
 				}
-				catch(const cv::Exception& e)
-				{
-					dr.IsPass = false;
-					dr.ErrorString = e.err;
+				catch(const cv::Exception&)
+				{				
+					dr.ErrorCode = RESULT_FAIL_UNKNOWN;
 				}
 				m_stopTimer = std::time(NULL);
 				//输出report
 				WriteReport(dr);
 			}
 			else
-			{
-				dr.IsPass = false;
-				dr.ErrorString = "获取图片错误！请检查摄像头的连接！";
+			{			
+				dr.ErrorCode = RESULT_FAIL_CAMERA;
 			}
 		}
 		else
-		{
-			dr.IsPass = false;
-			dr.ErrorString = "请扫条码！";
+		{		
+			dr.ErrorCode = RESULT_FAIL_BAR_CODE;
 		}
-		
+		ForNextNumberInput();
 	}
 	else
-	{
-		dr.IsPass = false;
-		dr.ErrorString = "无法使用检测程序，软件未注册！";
+	{	
+		dr.ErrorCode = RESULT_FAIL_AUTH;
 	}
 	ShowResult(dr);
-	return dr.IsPass;
+	return dr.IsPass();
 }
 
 
@@ -280,24 +276,22 @@ shared_ptr<DetectionProgram> CMFC_DetectionView::GetDetectionProgram()
 	return m_FirstProgram;
 }
 
-
-
-
-
 void CMFC_DetectionView::OnBnClickedGetPic3()
 {
 	shared_ptr<ImageSource> camera_source = ImageSourceFactory::GetImageFromCamera();
 	IplImage_Ptr img = camera_source->GetImage();
 	Detect(img,GetDetectionProgram());
+	
 }
 
 
 void CMFC_DetectionView::ShowResult(DetectionResult& dr)
 {
-	itsResultImage.CopyOf(dr.ResultImage);
-	m_ErrorString = dr.ErrorString.c_str();
+	itsResultImage.CopyOf(dr.ResultImage);	
+	m_ErrorString = ResultFactory::GetInstance()->GetErrorStringByErrorCode(dr.ErrorCode).c_str();
+	//need udpate
 	m_Brush.DeleteObject();
-	if(dr.IsPass)
+	if(dr.IsPass())
 		m_Brush.CreateSolidBrush(RGB(0,255,0));
 	else
 		m_Brush.CreateSolidBrush(RGB(255,0,0));
@@ -347,12 +341,6 @@ void CMFC_DetectionView::OnPaint()
 	DrawRgn.CreateEllipticRgn(0,0,80,80);
 	GetDlgItem(IDC_STATE_PIC)->GetDC()->FillRgn(&DrawRgn,&m_Brush);
 }
-
-
-
-
-
-
 
 void CMFC_DetectionView::OnMenuSelectProgram()
 {
@@ -606,7 +594,7 @@ void CMFC_DetectionView::WriteReport(DetectionResult& dr)
 
 	filepath = string("D:\\TestFlag\\") + BuildFileName(m_strBarCode.GetString(),"flg");
 	ofstream flagFile(filepath.c_str());
-	if(dr.IsPass)
+	if(dr.IsPass())
 		flagFile << 1;
 	else
 		flagFile << 0;

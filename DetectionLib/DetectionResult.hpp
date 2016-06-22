@@ -62,11 +62,23 @@ private:
 };
 
 
+#define RESULT_PASS 0
+#define RESULT_FAIL_PEDESTAL -1
+#define RESULT_FAIL_CABLE -2
+#define RESULT_FAIL_SILK -3
+#define RESULT_FAIL_LOCK -4
+#define RESULT_FAIL_CAMERA -5
+#define RESULT_FAIL_AUTH -6
+#define RESULT_FAIL_UNKNOWN -7
+#define RESULT_FAIL_BAR_CODE -8
+
+
 struct DetectionResult
 {
 	ReportLineList Report;
-	bool IsPass;
-	string ErrorString;
+	//bool IsPass;
+	bool IsPass() { return RESULT_PASS == ErrorCode;}
+	int ErrorCode;
 	IplImage_Ptr ResultImage;
 	void AddItemReport(const string& unit, const string& name, bool pass, long time);
 	void AddUnitReport();
@@ -75,11 +87,7 @@ struct DetectionResult
 class ResultFactory
 {
 public:
-	virtual ~ResultFactory(){}
-	virtual string GetPassString() const = 0;
-	virtual string GetPedestalErrorString() const = 0;
-	virtual string GetSilkErrorString() const = 0;
-	virtual string GetLockErrorString() const = 0;
-	virtual string GetBlueBoxErrorString() const = 0;
+	virtual ~ResultFactory(){}	
+	virtual string GetErrorStringByErrorCode(int ecode) const = 0;
 	static shared_ptr<ResultFactory> GetInstance();
 };

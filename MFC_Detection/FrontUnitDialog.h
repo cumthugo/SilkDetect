@@ -80,4 +80,16 @@ public:
 	int m_SilkSearchWidth;
 	int m_SilkMaxGapAround;
 	BOOL m_ImagePreProcess;
+	int m_CableColorMin_R;
+	int m_CableColorMin_G;
+	int m_CableColorMin_B;
+	int m_CableColorMax_R;
+	int m_CableColorMax_G;
+	int m_CableColorMax_B;
+	int m_CableSearchMin;
+	int m_CableSearchMax;
+	BOOL m_IsCableColorHSV;
+	int m_CablePixelCount;
+	int m_CableXOffset;
+	int m_CableSearchWidth;
 };
