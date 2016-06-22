@@ -34,7 +34,8 @@ public:
 class CommonSilkDetectAlgorithm : public SilkDetectAlgorithm
 {
 public:
-	CommonSilkDetectAlgorithm():XOffset(0),SearchWidth(0),MaxGapAround(-1){}
+	CommonSilkDetectAlgorithm():ColorRange(Range<CvScalar>(CV_RGB(0,0,0),CV_RGB(255,255,255))),
+		SearchRange(Range<int>(0,0)),PixelCount(0),XOffset(0),SearchWidth(0),MaxGapAround(-1){}
 	void Detect(const IplImage_Ptr sourceImage,const CvRect& PedestalRect,int PedestalPosition,DetectionResult& result );
 	//序列化
 public:
@@ -59,6 +60,8 @@ ostream& operator<<(ostream& o, const CommonSilkDetectAlgorithm& rhs);
 class FrontLockDetectAlgorithm : public LockDetectAlgorithm
 {
 public:
+	FrontLockDetectAlgorithm():ColorRange(Range<CvScalar>(CV_RGB(0,0,0),CV_RGB(255,255,255))),
+		SearchRange(Range<int>(0,0)),PixelCount(0),XOffset(0),SearchWidth(0){}
 	void Detect(const IplImage_Ptr sourceImage,const CvRect& PedestalRect,int PedestalPosition,DetectionResult& result );
 	//序列化
 public:
@@ -82,6 +85,8 @@ ostream& operator<<(ostream& o, const FrontLockDetectAlgorithm& rhs);
 class BackLockDetectAlgorithm : public LockDetectAlgorithm
 {
 public:
+	BackLockDetectAlgorithm():ColorRange(Range<CvScalar>(CV_RGB(0,0,0),CV_RGB(255,255,255))),
+		SearchRange(Range<int>(0,0)),PixelCount(0){}
 	void Detect(const IplImage_Ptr sourceImage,const CvRect& PedestalRect,int PedestalPosition,DetectionResult& result );
 	//序列化
 public:

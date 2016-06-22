@@ -86,7 +86,13 @@
 #define IDC_EDIT42                      1053
 #define IDC_CHECK6                      1054
 #define IDC_RADIO7                      1055
+#define IDC_BTN_ADD_FRONT               1055
 #define IDC_RADIO8                      1056
+#define IDC_BTN_ADD_HARD                1056
+#define IDC_BTN_ADD_BACK                1057
+#define IDC_BTN_ADD_NO_LOCK             1058
+#define IDC_BUTTON6                     1059
+#define IDC_BTN_DEL                     1059
 #define ID_32771                        32771
 #define ID_32772                        32772
 #define ID_32773                        32773
@@ -111,7 +117,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        332
 #define _APS_NEXT_COMMAND_VALUE         32797
-#define _APS_NEXT_CONTROL_VALUE         1055
+#define _APS_NEXT_CONTROL_VALUE         1056
 #define _APS_NEXT_SYMED_VALUE           310
 #endif
 #endif

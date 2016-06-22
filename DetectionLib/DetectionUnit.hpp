@@ -33,7 +33,7 @@ protected:
 	enum ScanDirection { SCAN_FROM_BOTTOM = 0, SCAN_FROM_TOP = 1};
 	enum { DETECT_FLAG_APPEAR = 0, DETECT_FLAG_DISAPPEAR = 1};
 	
-	DetectionUnit():SubImageRect(cvRect(0,0,0,0)),PreProcess(0),NeedRotate90(0){}
-	DetectionUnit(const string& Name):NamedItem(Name),SubImageRect(cvRect(0,0,0,0)),PreProcess(0){}
+	DetectionUnit():SubImageRect(cvRect(0,0,0,0)),PreProcess(0),NeedRotate90(0),PedestalPosition(SCAN_FROM_BOTTOM){}
+	DetectionUnit(const string& Name):NamedItem(Name),SubImageRect(cvRect(0,0,0,0)),PreProcess(0),NeedRotate90(0),PedestalPosition(SCAN_FROM_BOTTOM){}
 	virtual void DetectAlgorithm(const IplImage_Ptr sourceImage,const CvRect& PedestalRect,DetectionResult& result) = 0;
 };

@@ -202,6 +202,12 @@ void CNoLockUnitDialog::OnOK()
 {
 	UpdateData(TRUE);
 
+	if(m_UnitName == "")
+	{
+		MessageBox("名称不能为空，请输入检测名称！","输入错误",MB_OK | MB_ICONERROR);
+		return;
+	}
+
 	m_NoLockDetectionUnit->Name = m_UnitName.GetString();
 
 	m_NoLockDetectionUnit->NeedRotate90 = m_SilkPositionSelectRadio >= 2 ? 1 : 0;

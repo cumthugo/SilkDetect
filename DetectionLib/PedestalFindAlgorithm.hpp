@@ -7,7 +7,8 @@ class PedestalFindAlgorithm : public TreeSerialization
 {
 public:
 	virtual ~PedestalFindAlgorithm(){}
-	PedestalFindAlgorithm():XLeastPointNumber(5),YLeastPointNumber(0){}
+	PedestalFindAlgorithm():ColorRange(Range<CvScalar>(CV_RGB(0,0,0),CV_RGB(255,255,255))),SizeRange(Range<int>(0,0)),ScaleRange(Range<double>(0,0)),
+		XLeastPointNumber(5),YLeastPointNumber(0){}
 	virtual CvRect Find(const IplImage_Ptr sourceImage) = 0;
 	void ProcessInclined(IplImage_Ptr& sourceImage);
 

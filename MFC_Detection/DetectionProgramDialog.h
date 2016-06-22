@@ -29,4 +29,9 @@ public:
 	afx_msg void OnBnClickedEdit();
 	DetectionProgram::iterator GetCurrentSelectedItem();
 	afx_msg void OnLbnDblclkList2();
+	afx_msg void OnBnClickedBtnAddFront();
+	afx_msg void OnBnClickedBtnAddHard();
+	afx_msg void OnBnClickedBtnAddBack();
+	afx_msg void OnBnClickedBtnAddNoLock();
+	afx_msg void OnBnClickedBtnDel();
 };

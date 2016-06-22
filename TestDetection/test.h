@@ -15,7 +15,7 @@ class Test : public CppUnit::TestFixture
 {
 	CPPUNIT_TEST_SUITE(Test);
 	CPPUNIT_TEST(Test_UnitSerialization);
-	/*
+	/**/
 	CPPUNIT_TEST(Test_Clone);
 	CPPUNIT_TEST(Test_HSV);
 	CPPUNIT_TEST(Test_RestrictRect);
@@ -33,7 +33,7 @@ class Test : public CppUnit::TestFixture
 	CPPUNIT_TEST(Test_md5);
 	CPPUNIT_TEST(Test_InclinedPicture);
 	CPPUNIT_TEST(Test_FrontDetectionUnitSilkOnBottom);
-	CPPUNIT_TEST(Test_FrontDetectioinUnit2);*/
+	CPPUNIT_TEST(Test_FrontDetectioinUnit2);
 
 	CPPUNIT_TEST( Test_Rotate90);
 	CPPUNIT_TEST(Test_SilkOnRight);

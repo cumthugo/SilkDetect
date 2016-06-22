@@ -264,6 +264,12 @@ void CBackUnitDialog::OnOK()
 	// TODO: 在此添加专用代码和/或调用基类
 	UpdateData(TRUE);
 
+	if(m_UnitName == "")
+	{
+		MessageBox("名称不能为空，请输入检测名称！","输入错误",MB_OK | MB_ICONERROR);
+		return;
+	}
+
 	m_BackDetectionUnit->Name = m_UnitName.GetString();
 	m_BackDetectionUnit->SubImageRect = cvRect(m_SubRect_x,m_SubRect_y,m_SubRect_width,m_SubRect_height);
 

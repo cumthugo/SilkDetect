@@ -168,7 +168,7 @@ void CMFC_DetectionView::OnInitialUpdate()
 		if(++comPort > 10)
 		{
 			MessageBox("串口打开失败！");
-			return;
+			return;			
 		}
 		StrPort.Format("COM%d",comPort);
 	}
@@ -177,6 +177,7 @@ void CMFC_DetectionView::OnInitialUpdate()
 	//打开串口成功，开始接受数据
 	gCommObject.SetClientWnd(m_hWnd);
 	gCommObject.StartReceive();
+	//请不要在这增加代码，因为串口打开失败可能不执行。
 }
 
 

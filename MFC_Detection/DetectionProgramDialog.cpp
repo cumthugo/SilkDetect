@@ -35,6 +35,11 @@ void CDetectionProgramDialog::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CDetectionProgramDialog, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON2, &CDetectionProgramDialog::OnBnClickedEdit)
 	ON_LBN_DBLCLK(IDC_LIST2, &CDetectionProgramDialog::OnLbnDblclkList2)
+	ON_BN_CLICKED(IDC_BTN_ADD_FRONT, &CDetectionProgramDialog::OnBnClickedBtnAddFront)
+	ON_BN_CLICKED(IDC_BTN_ADD_HARD, &CDetectionProgramDialog::OnBnClickedBtnAddHard)
+	ON_BN_CLICKED(IDC_BTN_ADD_BACK, &CDetectionProgramDialog::OnBnClickedBtnAddBack)
+	ON_BN_CLICKED(IDC_BTN_ADD_NO_LOCK, &CDetectionProgramDialog::OnBnClickedBtnAddNoLock)
+	ON_BN_CLICKED(IDC_BTN_DEL, &CDetectionProgramDialog::OnBnClickedBtnDel)
 END_MESSAGE_MAP()
 
 
@@ -134,4 +139,72 @@ void CDetectionProgramDialog::RefreshDetectionUnits()
 void CDetectionProgramDialog::OnLbnDblclkList2()
 {
 	OnBnClickedEdit();
+}
+
+
+void CDetectionProgramDialog::OnBnClickedBtnAddFront()
+{
+	shared_ptr<FrontDetectionUnit> unit =  shared_ptr<FrontDetectionUnit>(new FrontDetectionUnit);
+	unit->PedestalFinder = shared_ptr<PedestalFindAlgorithm>(new SimplePedestalFinder);
+	
+	assert(unit);
+	CFrontUnitDialog dlg(unit);
+	if(dlg.DoModal() == IDOK)
+	{
+		m_DetectionProgram.push_back(unit);
+		RefreshDetectionUnits();
+	}
+}
+
+
+void CDetectionProgramDialog::OnBnClickedBtnAddHard()
+{
+	shared_ptr<HardLockDetectionUnit> unit = shared_ptr<HardLockDetectionUnit>(new HardLockDetectionUnit);
+	unit->PedestalFinder = shared_ptr<PedestalFindAlgorithm>(new SimplePedestalFinder);
+	assert(unit);
+	CHardLockDetectionDialog dlg(unit);
+	if(dlg.DoModal() == IDOK)
+	{
+		m_DetectionProgram.push_back(unit);
+		RefreshDetectionUnits();
+	}
+}
+
+
+void CDetectionProgramDialog::OnBnClickedBtnAddBack()
+{
+	shared_ptr<BackDetectionUnit> unit = shared_ptr<BackDetectionUnit>(new BackDetectionUnit);
+	unit->PedestalFinder = shared_ptr<PedestalFindAlgorithm>(new SimplePedestalFinder);
+	assert(unit);
+	CBackUnitDialog dlg(unit);
+	if(dlg.DoModal() == IDOK)
+	{
+		m_DetectionProgram.push_back(unit);
+		RefreshDetectionUnits();
+	}
+}
+
+
+void CDetectionProgramDialog::OnBnClickedBtnAddNoLock()
+{
+	shared_ptr<NoLockDetectionUnit> unit = shared_ptr<NoLockDetectionUnit>(new NoLockDetectionUnit);
+	unit->PedestalFinder = shared_ptr<PedestalFindAlgorithm>(new SimplePedestalFinder);
+	assert(unit);
+	CNoLockUnitDialog dlg(unit);
+	if(dlg.DoModal() == IDOK)
+	{
+		m_DetectionProgram.push_back(unit);
+		RefreshDetectionUnits();
+	}
+}
+
+
+void CDetectionProgramDialog::OnBnClickedBtnDel()
+{
+	DetectionProgram::iterator edit_it  = GetCurrentSelectedItem();
+	if(edit_it != m_DetectionProgram.end())		// find it
+	{
+		m_DetectionProgram.erase(edit_it);
+		RefreshDetectionUnits();
+	}
 }
