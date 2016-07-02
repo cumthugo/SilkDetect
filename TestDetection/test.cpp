@@ -272,7 +272,7 @@ void Test::Test_Clone()
 void Test::Test_FrontDetectionUnit()
 {
 	shared_ptr<FrontDetectionUnit>  fdu(new FrontDetectionUnit);
-	DetectionResult dr;
+	DetectionResultList drl;
 
 	fdu->PedestalPosition = PEDESTAL_ON_BOTTOM;
 
@@ -307,13 +307,13 @@ void Test::Test_FrontDetectionUnit()
 		testImg= cvLoadImage(fmt.str().c_str());
 		CPPUNIT_ASSERT(testImg);
 		cout << "\n检测图片文件" << i << ".jpg";
-		dp.Detect(testImg,dr);
-		cout << "\t------"<<dr.ErrorString;
+		dp.Detect(testImg,drl);
+		cout << "\t------"<<FirstErrorResult(drl).ErrorString;
 		
 		if(result[i-1])
-			CPPUNIT_ASSERT_EQUAL(true,dr.IsPass);
+			CPPUNIT_ASSERT_EQUAL(true,FirstErrorResult(drl).IsPass);
 		else
-			CPPUNIT_ASSERT_EQUAL(false,dr.IsPass);
+			CPPUNIT_ASSERT_EQUAL(false,FirstErrorResult(drl).IsPass);
 	}
 }
 
@@ -322,7 +322,7 @@ void Test::Test_FrontDetectionUnit()
 void Test::Test_FrontDetectioinUnit2()
 {
 	shared_ptr<FrontDetectionUnit>  sa(new FrontDetectionUnit);
-	DetectionResult dr;
+	DetectionResultList drl;
 
 
 	sa->PedestalPosition = PEDESTAL_ON_BOTTOM;
@@ -362,26 +362,26 @@ void Test::Test_FrontDetectioinUnit2()
 		testImg= cvLoadImage(fmt.str().c_str());
 		CPPUNIT_ASSERT(testImg);
 		cout << "\n检测图片文件" << i << ".jpg";
-		dp.Detect(testImg,dr);
-		cout << "\t------"<<dr.ErrorString;
-		if(!dr.IsPass)
+		dp.Detect(testImg,drl);
+		cout << "\t------"<<FirstErrorResult(drl).ErrorString;
+		if(!FirstErrorResult(drl).IsPass)
 		{
 			cvNamedWindow("hello");
-			cvShowImage("hello",dr.ResultImage);
+			cvShowImage("hello",FirstErrorResult(drl).ResultImage);
 			cvWaitKey(0);
 			cvDestroyWindow("hello");
 		}
 		if(result[i-1])
-			CPPUNIT_ASSERT_EQUAL(true,dr.IsPass);
+			CPPUNIT_ASSERT_EQUAL(true,FirstErrorResult(drl).IsPass);
 		else
-			CPPUNIT_ASSERT_EQUAL(false,dr.IsPass);/**/
+			CPPUNIT_ASSERT_EQUAL(false,FirstErrorResult(drl).IsPass);/**/
 	}
 }
 
 void Test::Test_FrontDetectionUnitSilkOnBottom()
 {
 	shared_ptr<FrontDetectionUnit>  sa(new FrontDetectionUnit);
-	DetectionResult dr;
+	DetectionResultList drl;
 
 	sa->PedestalPosition = PEDESTAL_ON_TOP;
 	sa->PreProcess = 1;
@@ -418,19 +418,19 @@ void Test::Test_FrontDetectionUnitSilkOnBottom()
 		testImg= cvLoadImage(fmt.str().c_str());
 		CPPUNIT_ASSERT(testImg);
 		cout << "\n检测图片文件" << i << ".jpg";
-		dp.Detect(testImg,dr);
-		cout << "\t------"<<dr.ErrorString;
-		/*if(!dr.IsPass)
+		dp.Detect(testImg,drl);
+		cout << "\t------"<<FirstErrorResult(drl).ErrorString;
+		/*if(!FirstErrorResult(drl).IsPass)
 		{
 			cvNamedWindow("hello");
-			cvShowImage("hello",dr.ResultImage);
+			cvShowImage("hello",FirstErrorResult(drl).ResultImage);
 			cvWaitKey(0);
 			cvDestroyWindow("hello");
 		}*/
 		if(result[i-1])
-			CPPUNIT_ASSERT_EQUAL(true,dr.IsPass);
+			CPPUNIT_ASSERT_EQUAL(true,FirstErrorResult(drl).IsPass);
 		else
-			CPPUNIT_ASSERT_EQUAL(false,dr.IsPass);
+			CPPUNIT_ASSERT_EQUAL(false,FirstErrorResult(drl).IsPass);
 	}
 }
 
@@ -439,7 +439,7 @@ void Test::Test_FrontDetectionUnitSilkOnBottom()
 void Test::Test_InclinedPicture()
 {
 	shared_ptr<FrontDetectionUnit>  sa(new FrontDetectionUnit);
-	DetectionResult dr;
+	DetectionResultList drl;
 
 	sa->PedestalPosition = PEDESTAL_ON_TOP;
 	sa->PreProcess = 1;
@@ -465,8 +465,8 @@ void Test::Test_InclinedPicture()
 
 	testImg= cvLoadImage("E:\\project\\天宝电子\\排线检测\\left1Pic\\8.jpg");
 	CPPUNIT_ASSERT(testImg);
-	dp.Detect(testImg,dr);
-	CPPUNIT_ASSERT_EQUAL(true,dr.IsPass);
+	dp.Detect(testImg,drl);
+	CPPUNIT_ASSERT_EQUAL(true,FirstErrorResult(drl).IsPass);
 }
 
 
@@ -487,7 +487,7 @@ void Test::Test_HSV()
 
 void Test::Test_DetectProgram()
 {
-	DetectionResult dr;
+	DetectionResultList drl;
 	shared_ptr<FrontDetectionUnit> CenterSilkAlgorithm (new FrontDetectionUnit);
 
 	CenterSilkAlgorithm->SubImageRect = cvRect(2319,1491,677,654);
@@ -562,16 +562,16 @@ void Test::Test_DetectProgram()
 
 	IplImage_Ptr testImg = cvLoadImage("E:\\project\\天宝电子\\排线检测\\testWholePic\\1.jpg");
 
-	dp.Detect(testImg,dr);
-	CPPUNIT_ASSERT_EQUAL(true,dr.IsPass);
+	dp.Detect(testImg,drl);
+	CPPUNIT_ASSERT_EQUAL(true,FirstErrorResult(drl).IsPass);
 	/*cvNamedWindow("hello");
-	cvShowImage("hello",dr.ResultImage);
+	cvShowImage("hello",FirstErrorResult(drl).ResultImage);
 	cvWaitKey();*/
 }
 
 void Test::Test_DetectProgramRealPic()
 {
-	DetectionResult dr;
+	DetectionResultList drl;
 	shared_ptr<FrontDetectionUnit> CenterSilkAlgorithm (new FrontDetectionUnit);
 
 	CenterSilkAlgorithm->SubImageRect = cvRect(484,488,143,140);
@@ -642,13 +642,13 @@ void Test::Test_DetectProgramRealPic()
 
 	IplImage_Ptr testImg = cvLoadImage("E:\\project\\天宝电子\\排线检测\\testWholePic\\2.jpg");
 
-	dp.Detect(testImg,dr);
-	CPPUNIT_ASSERT_EQUAL(true,dr.IsPass);
-	cout << endl << dr.ErrorString << endl;
-	/*if(!dr.IsPass)
+	dp.Detect(testImg,drl);
+	CPPUNIT_ASSERT_EQUAL(true,FirstErrorResult(drl).IsPass);
+	cout << endl << FirstErrorResult(drl).ErrorString << endl;
+	/*if(!FirstErrorResult(drl).IsPass)
 	{
 		cvNamedWindow("hello");
-		cvShowImage("hello",dr.ResultImage);
+		cvShowImage("hello",FirstErrorResult(drl).ResultImage);
 		cvWaitKey();
 		cvDestroyWindow("hello");
 	}
@@ -657,7 +657,7 @@ void Test::Test_DetectProgramRealPic()
 
 void Test::Test_BackDetectionUnit()
 {
-	DetectionResult dr;
+	DetectionResultList drl;
 	shared_ptr<BackDetectionUnit> ba(new BackDetectionUnit);
 
 	ba->SubImageRect = cvRect(0,0,600,400);
@@ -682,13 +682,13 @@ void Test::Test_BackDetectionUnit()
 
 
 	IplImage_Ptr testImg = cvLoadImage("E:\\project\\天宝电子\\排线检测\\testBackPic\\2.jpg");
-	dp.Detect(testImg,dr);
-	cout << endl << dr.ErrorString << endl;
-	CPPUNIT_ASSERT_EQUAL(false,dr.IsPass);
-	if(!dr.IsPass)
+	dp.Detect(testImg,drl);
+	cout << endl << FirstErrorResult(drl).ErrorString << endl;
+	CPPUNIT_ASSERT_EQUAL(false,FirstErrorResult(drl).IsPass);
+	if(!FirstErrorResult(drl).IsPass)
 	{
 		cvNamedWindow("hello");
-		cvShowImage("hello",dr.ResultImage);
+		cvShowImage("hello",FirstErrorResult(drl).ResultImage);
 		cvWaitKey();
 		cvDestroyWindow("hello");
 	}/**/
@@ -699,7 +699,7 @@ void Test::Test_BackDetectionUnit()
 void Test::Test_HardFrontDetectionUnit()
 {
 	shared_ptr<HardLockDetectionUnit> hld (new HardLockDetectionUnit);
-	DetectionResult dr;
+	DetectionResultList drl;
 
 	hld->SubImageRect = cvRect(400,250,250,200);
 	hld->PedestalPosition = PEDESTAL_ON_BOTTOM;
@@ -726,19 +726,19 @@ void Test::Test_HardFrontDetectionUnit()
 		testImg= cvLoadImage(fmt.str().c_str());
 		CPPUNIT_ASSERT(testImg);
 		cout << "\n检测图片文件" << i << ".jpg";
-		dp.Detect(testImg,dr);
-		cout << "\t------"<<dr.ErrorString;
-		/*if(!dr.IsPass)
+		dp.Detect(testImg,drl);
+		cout << "\t------"<<FirstErrorResult(drl).ErrorString;
+		/*if(!FirstErrorResult(drl).IsPass)
 		{
 			cvNamedWindow("hello");
-			cvShowImage("hello",dr.ResultImage);
+			cvShowImage("hello",FirstErrorResult(drl).ResultImage);
 			cvWaitKey(0);
 			cvDestroyWindow("hello");
 		}*/
 		if(result[i-1])
-			CPPUNIT_ASSERT_EQUAL(true,dr.IsPass);
+			CPPUNIT_ASSERT_EQUAL(true,FirstErrorResult(drl).IsPass);
 		else
-			CPPUNIT_ASSERT_EQUAL(false,dr.IsPass);/**/
+			CPPUNIT_ASSERT_EQUAL(false,FirstErrorResult(drl).IsPass);/**/
 	}
 }
 
@@ -773,7 +773,7 @@ void Test::Test_PedestalFind()
 void Test::Test_Silk_LeftAndRight()
 {
 	shared_ptr<FrontDetectionUnit>  fdu(new FrontDetectionUnit);
-	DetectionResult dr;
+	DetectionResultList drl;
 
 	fdu->PedestalPosition = PEDESTAL_ON_BOTTOM;
 
@@ -802,12 +802,12 @@ void Test::Test_Silk_LeftAndRight()
 	testImg= cvLoadImage("E:\\project\\天宝电子\\排线检测\\myPic\\6.jpg");
 	CPPUNIT_ASSERT(testImg);
 	cout << "\n检测图片文件" << 6 << ".jpg";
-	dp.Detect(testImg,dr);
-	cout << "\t------"<<dr.ErrorString;
-	if(!dr.IsPass)
+	dp.Detect(testImg,drl);
+	cout << "\t------"<<FirstErrorResult(drl).ErrorString;
+	if(!FirstErrorResult(drl).IsPass)
 	{
 		cvNamedWindow("hello");
-		cvShowImage("hello",dr.ResultImage);
+		cvShowImage("hello",FirstErrorResult(drl).ResultImage);
 		cvWaitKey(0);
 		cvDestroyWindow("hello");
 	}
@@ -841,7 +841,7 @@ void Test::Test_Rotate90()
 void Test::Test_SilkOnRight()
 {
 	shared_ptr<FrontDetectionUnit>  fdu(new FrontDetectionUnit);
-	DetectionResult dr;
+	DetectionResultList drl;
 
 	fdu->PedestalPosition = PEDESTAL_ON_BOTTOM;
 	fdu->NeedRotate90 = 1;
@@ -870,8 +870,8 @@ void Test::Test_SilkOnRight()
 	testImg= cvLoadImage(str.c_str());
 	CPPUNIT_ASSERT(testImg);
 	cout << "\n检测垂直图片文件rotate1.jpg";
-	dp.Detect(testImg,dr);
-	cout << "\t------"<<dr.ErrorString;
-	CPPUNIT_ASSERT_EQUAL(true,dr.IsPass);
+	dp.Detect(testImg,drl);
+	cout << "\t------"<<FirstErrorResult(drl).ErrorString;
+	CPPUNIT_ASSERT_EQUAL(true,FirstErrorResult(drl).IsPass);
 
 }

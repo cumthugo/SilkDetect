@@ -66,12 +66,15 @@ struct DetectionResult
 {
 	ReportLineList Report;
 	bool IsPass;
-	bool NeedManualCheck;
 	string ErrorString;
 	IplImage_Ptr ResultImage;
 	void AddItemReport(const string& unit, const string& name, bool pass, long time);
 	void AddUnitReport();
 };
+
+typedef std::list<DetectionResult> DetectionResultList;
+
+DetectionResult& FirstErrorResult(DetectionResultList& result_list);
 
 class ResultFactory
 {

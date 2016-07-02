@@ -38,7 +38,7 @@ protected:
 
 //自己的接口
 
-	DetectionResult Detect( IplImage_Ptr img,shared_ptr<DetectionProgram> dp);
+	DetectionResultList Detect( IplImage_Ptr img,shared_ptr<DetectionProgram> dp);
 	shared_ptr<DetectionProgram> GetDetectionProgram();
 	void ShowResult(DetectionResult& dr);
 	CvvImage itsResultImage;
@@ -54,6 +54,7 @@ protected:
 	//add in 2015/4/30 for param of save sample images
 	string itsScreenShotPath;
 	int itsMaxImagesPerFolder;
+	
 // 实现
 public:
 	virtual ~CMFC_DetectionView();
@@ -71,7 +72,8 @@ public:
 	afx_msg void OnBnClickedGetPic();
 
 	afx_msg LRESULT OnCommProc(WPARAM wParam, LPARAM lParam);
-
+	//add NeedManualCheck var
+	bool m_NeedManualCheck;
 	void StartManualJudge();
 
 	CString m_ErrorString;
@@ -108,8 +110,8 @@ public:
 	bool HasSecondStep();
 //add in 2015/10/13 for save first step report
 //人工检查对话框
-	DetectionResult itsFirstDetectResult;
-	DetectionResult itsSecondDetectResult;
+	DetectionResultList itsFirstDetectResult;
+	DetectionResultList itsSecondDetectResult;
 	int itsCurrentCheckStep;
 	Clock_MS itsManualTimer;
 	bool itsInManualConfirming;

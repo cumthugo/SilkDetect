@@ -1,0 +1,5 @@
+*.suo
+*/Release
+Release/
+*.sdf
+ipch/

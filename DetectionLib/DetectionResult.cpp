@@ -21,6 +21,16 @@ public:
 	virtual string GetBlueBoxErrorString() const { return "À¶É«ÌõÎ»ÖÃ´íÎó!";}
 };
 
+static DetectionResult err_detectresult;
+
+DetectionResult& FirstErrorResult( DetectionResultList& result_list )
+{
+	if (result_list.begin() != result_list.end())
+		return (*result_list.begin());
+	
+	return err_detectresult; /* must not return here */
+}
+
 shared_ptr<ResultFactory> ResultFactory::GetInstance()
 {
 	return shared_ptr<ResultFactory>(new ChineseResultFactory);

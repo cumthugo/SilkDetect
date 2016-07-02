@@ -244,10 +244,10 @@ void CMFC_DetectionView::OnBnClickedGetPic2()
 }
 
 
-DetectionResult CMFC_DetectionView::Detect( IplImage_Ptr img ,shared_ptr<DetectionProgram> dp )
+DetectionResultList CMFC_DetectionView::Detect( IplImage_Ptr img ,shared_ptr<DetectionProgram> dp )
 {
-	DetectionResult dr;
-	dr.NeedManualCheck = false;
+	DetectionResultList drl;
+	m_NeedManualCheck = false;
 	UpdateData(TRUE);
 	if(PassLicense())
 	{
@@ -258,37 +258,37 @@ DetectionResult CMFC_DetectionView::Detect( IplImage_Ptr img ,shared_ptr<Detecti
 				try
 				{
 					dp->SetScreenShot(itsScreenShotPath+ "\\" +dp->Name,itsMaxImagesPerFolder); //add in 2015/4/28
-					dp->Detect(img,dr);
-					if(!dr.IsPass)
-						dr.NeedManualCheck = true;
+					dp->Detect(img,drl);
+					if(!FirstErrorResult(drl).IsPass)
+						m_NeedManualCheck = true;
 				}
 				catch(const cv::Exception& e)
 				{
-					dr.IsPass = false;
-					dr.ErrorString = e.err;
-					dr.NeedManualCheck = true;
+					FirstErrorResult(drl).IsPass = false;
+					FirstErrorResult(drl).ErrorString = e.err;
+					m_NeedManualCheck = true;
 				}				
 			}
 			else
 			{
-				dr.IsPass = false;
-				dr.ErrorString = "获取图片错误！请检查摄像头的连接！";
+				FirstErrorResult(drl).IsPass = false;
+				FirstErrorResult(drl).ErrorString = "获取图片错误！请检查摄像头的连接！";
 			}
 		}
 		else
 		{
-			dr.IsPass = false;
-			dr.ErrorString = "请扫条码！";
+			FirstErrorResult(drl).IsPass = false;
+			FirstErrorResult(drl).ErrorString = "请扫条码！";
 		}
 		ForNextNumberInput();
 	}
 	else
 	{
-		dr.IsPass = false;
-		dr.ErrorString = "无法使用检测程序，软件未注册！";
+		FirstErrorResult(drl).IsPass = false;
+		FirstErrorResult(drl).ErrorString = "无法使用检测程序，软件未注册！";
 	}
-	ShowResult(dr);
-	return dr;
+	ShowResult(FirstErrorResult(drl));
+	return drl;
 }
 
 
@@ -497,42 +497,42 @@ LRESULT CMFC_DetectionView::OnCommProc( WPARAM wParam, LPARAM lParam )
 		{			
 			itsCurrentCheckStep = 1;
 			m_startTimer = std::time(NULL); //anyway, start time from here
-			DetectionResult dr = Detect(img,GetDetectionProgram());
+			DetectionResultList drl = Detect(img,GetDetectionProgram());
 
 			//save values			
-			itsFirstDetectResult = dr;
+			itsFirstDetectResult = drl;
 
-			if(dr.NeedManualCheck)			
+			if(m_NeedManualCheck)			
 				StartManualJudge();
-			if(dr.IsPass) // if only one step and passed, done here
+			if(FirstErrorResult(drl).IsPass) // if only one step and passed, done here
 			{
 				gCommObject.SendCommData(0x01); 
 				if(!HasSecondStep())
 				{
 					m_stopTimer = std::time(NULL);
 					//输出report, 
-					WriteReport(dr);
+					WriteReport(drl);
 				}
 			}			
 		}
 		else if(cmd == 0xA1)
 		{
 			itsCurrentCheckStep = 2;
-			DetectionResult dr = Detect(img,GetDetectionProgram());			
+			DetectionResult drl = Detect(img,GetDetectionProgram());			
 			//save values			
-			itsSecondDetectResult = dr;
+			itsSecondDetectResult = drl;
 
-			if(dr.NeedManualCheck)
+			if(m_NeedManualCheck)
 				StartManualJudge();
-			if(dr.IsPass) //pass, done here
+			if(FirstErrorResult(drl).IsPass) //pass, done here
 			{
 				gCommObject.SendCommData(0x01);
 				//sure has second step,
-				std::copy(itsFirstDetectResult.Report.rbegin(),itsFirstDetectResult.Report.rend(),front_inserter(dr.Report)); // insert first result
-				dr.IsPass = dr.IsPass & itsFirstDetectResult.IsPass;
+				std::copy(itsFirstDetectResult.Report.rbegin(),itsFirstDetectResult.Report.rend(),front_inserter(drl.Report)); // insert first result
+				drl.IsPass = drl.IsPass & itsFirstDetectResult.IsPass;
 				m_stopTimer = std::time(NULL);
 				//输出report,
-				WriteReport(dr);
+				WriteReport(drl);
 				itsFirstDetectResult.Report.clear();
 				itsFirstDetectResult.IsPass = false;
 			}			

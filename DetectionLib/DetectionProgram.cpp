@@ -2,12 +2,14 @@
 
 #include "DetectionUnitFactory.hpp"
 
-void DetectionProgram::Detect( IplImage_Ptr sourceImage,DetectionResult& result )
+void DetectionProgram::Detect( IplImage_Ptr sourceImage,DetectionResultList& result )
 {
-	result.IsPass = true;
-	result.ErrorString = ResultFactory::GetInstance()->GetPassString();
-	result.ResultImage = cvCloneImage(sourceImage);
-
+	/* first_error_dr is used to show first error result */
+	DetectionResult first_error_dr;
+	first_error_dr.IsPass = true;
+	first_error_dr.ErrorString = ResultFactory::GetInstance()->GetPassString();
+	first_error_dr.ResultImage = cvCloneImage(sourceImage);
+	result.push_back(first_error_dr);
 	//遍历每个检测算法，先截取子图，在运行独自的检测算法，最后如果检测有错误，就把错误信息拷贝过去。
 	foreach(shared_ptr<DetectionUnit> da,*this)
 	{
@@ -25,20 +27,23 @@ void DetectionProgram::Detect( IplImage_Ptr sourceImage,DetectionResult& result 
 		
 		itsScreenShot.Save(da->Name,subImage,da); //add in 2015/4/28
 
-		//report
-		result.Report.push_back(make_shared<ReportUnit>());
+		/* just add the result to result list */
+		result.push_back(dr);
+
+		//report TODO: need change report logic
+		/*result.Report.push_back(make_shared<ReportUnit>());  // not useful any more
 		copy(dr.Report.begin(),dr.Report.end(),back_inserter(result.Report));
+		*/
 
 
-		if(!dr.IsPass)
+		if(first_error_dr.IsPass && !dr.IsPass) // it means first error
 		{
-			result.IsPass = dr.IsPass;
-			result.ErrorString = dr.ErrorString;
+			first_error_dr.IsPass = dr.IsPass;
+			first_error_dr.ErrorString = dr.ErrorString;
 			
-			cvSetImageROI(result.ResultImage,ROIImageRect);
-			cvCopy(dr.ResultImage,result.ResultImage);
-			cvResetImageROI(result.ResultImage);
-			return;
+			cvSetImageROI(first_error_dr.ResultImage,ROIImageRect);
+			cvCopy(dr.ResultImage,first_error_dr.ResultImage);
+			cvResetImageROI(first_error_dr.ResultImage);
 		}
 	}
 }

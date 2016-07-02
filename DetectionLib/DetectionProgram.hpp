@@ -17,7 +17,7 @@ public:
 	// operators
 	void UpItem(iterator pos);
 
-	void Detect(IplImage_Ptr sourceImage,DetectionResult& result);
+	void Detect(IplImage_Ptr sourceImage,DetectionResultList& result);
 
 	//add in 2015/04/28
 	void SetScreenShot(const string& folderPath, int N){ itsScreenShot.Init(folderPath,N);}
