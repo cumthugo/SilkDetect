@@ -240,7 +240,6 @@ void CMFC_DetectionView::OnBnClickedGetPic2()
 	IplImage_Ptr img = camera_source->GetImage();
 	if(img)
 		cvSaveImage("d:\\test.jpg",img);
-	
 }
 
 
@@ -487,8 +486,7 @@ LRESULT CMFC_DetectionView::OnCommProc( WPARAM wParam, LPARAM lParam )
 			}
 			else if(2 == itsCurrentCheckStep)
 			{
-				//std::copy(itsFirstDetectResult.Report.rbegin(),itsFirstDetectResult.Report.rend(),front_inserter(itsSecondDetectResult.Report));
-				std::copy(itsFirstDetectResult.rbegin(),itsFirstDetectResult.rend(),front_inserter(itsSecondDetectResult)); // insert first result
+				MergeFirstResult2SecondResult();
 				FirstErrorResult(itsSecondDetectResult).IsPass = FirstErrorResult(itsSecondDetectResult).IsPass & FirstErrorResult(itsFirstDetectResult).IsPass;
 				itsSecondDetectResult.push_back(manual_result);
 				m_stopTimer = std::time(NULL);
@@ -529,7 +527,7 @@ LRESULT CMFC_DetectionView::OnCommProc( WPARAM wParam, LPARAM lParam )
 			{
 				gCommObject.SendCommData(0x01);
 				//sure has second step,
-				std::copy(itsFirstDetectResult.rbegin(),itsFirstDetectResult.rend(),front_inserter(itsSecondDetectResult)); // insert first result
+				MergeFirstResult2SecondResult();
 				FirstErrorResult(itsSecondDetectResult).IsPass = FirstErrorResult(itsSecondDetectResult).IsPass & FirstErrorResult(itsFirstDetectResult).IsPass;
 				m_stopTimer = std::time(NULL);
 				//Êä³öreport,
@@ -744,7 +742,7 @@ LRESULT CMFC_DetectionView::OnManualPassProc( WPARAM wParam, LPARAM lParam )
 			ShowResult(FirstErrorResult(itsSecondDetectResult));
 		}
 		//write report
-		std::copy(itsFirstDetectResult.rbegin(),itsFirstDetectResult.rend(),front_inserter(itsSecondDetectResult)); // insert first result
+		MergeFirstResult2SecondResult();
 		FirstErrorResult(itsSecondDetectResult).IsPass = FirstErrorResult(itsSecondDetectResult).IsPass & FirstErrorResult(itsFirstDetectResult).IsPass;
 		m_stopTimer = std::time(NULL);
 		//Êä³öreport,
@@ -754,4 +752,13 @@ LRESULT CMFC_DetectionView::OnManualPassProc( WPARAM wParam, LPARAM lParam )
 	}
 	
 	return 0;
+}
+
+void CMFC_DetectionView::MergeFirstResult2SecondResult()
+{
+	DetectionResult second_error_result = itsSecondDetectResult.front();
+	itsSecondDetectResult.pop_front();
+	DetectionResultList first_normal_result = NormalResultList(itsFirstDetectResult);
+	std::copy(first_normal_result.rbegin(),first_normal_result.rend(),front_inserter(itsSecondDetectResult)); // insert first result
+	itsSecondDetectResult.push_front(second_error_result);
 }

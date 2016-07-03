@@ -693,8 +693,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2,3,3,5
- PRODUCTVERSION 2,3,3,5
+ FILEVERSION 2,3,6,0
+ PRODUCTVERSION 2,3,6,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -711,12 +711,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "中国矿业大学"
             VALUE "FileDescription", "排线检测软件"
-            VALUE "FileVersion", "2.3.3.5"
+            VALUE "FileVersion", "2.3.6.0"
             VALUE "InternalName", "MFC_Detection.exe"
             VALUE "LegalCopyright", "CUMT(C) 中国矿业大学。保留所有权利。"
             VALUE "OriginalFilename", "MFC_Detection.exe"
             VALUE "ProductName", "排线检测软件"
-            VALUE "ProductVersion", "2.3.3.5"
+            VALUE "ProductVersion", "2.3.6.0"
         END
     END
     BLOCK "VarFileInfo"

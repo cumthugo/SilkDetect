@@ -71,6 +71,9 @@ public:
 	afx_msg void OnBnClickedGetPic();
 
 	afx_msg LRESULT OnCommProc(WPARAM wParam, LPARAM lParam);
+
+	void MergeFirstResult2SecondResult();
+
 	//add NeedManualCheck var
 	bool m_NeedManualCheck;
 	void StartManualJudge();
