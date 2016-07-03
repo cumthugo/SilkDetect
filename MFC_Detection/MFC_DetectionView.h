@@ -54,7 +54,6 @@ protected:
 	//add in 2015/4/30 for param of save sample images
 	string itsScreenShotPath;
 	int itsMaxImagesPerFolder;
-	
 // й╣ож
 public:
 	virtual ~CMFC_DetectionView();
@@ -100,7 +99,7 @@ public:
 public:
 	void ForNextNumberInput();
 	void SetThisWindowForground();
-	void WriteReport(DetectionResult& dr);
+	void WriteReport(DetectionResultList& drl);
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	CEdit m_BarCodeEdit;
 	CString m_strBarCode;

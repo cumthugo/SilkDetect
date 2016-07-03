@@ -30,12 +30,6 @@ void DetectionProgram::Detect( IplImage_Ptr sourceImage,DetectionResultList& res
 		/* just add the result to result list */
 		result.push_back(dr);
 
-		//report TODO: need change report logic
-		/*result.Report.push_back(make_shared<ReportUnit>());  // not useful any more
-		copy(dr.Report.begin(),dr.Report.end(),back_inserter(result.Report));
-		*/
-
-
 		if(first_error_dr.IsPass && !dr.IsPass) // it means first error
 		{
 			first_error_dr.IsPass = dr.IsPass;

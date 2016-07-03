@@ -75,6 +75,7 @@ struct DetectionResult
 typedef std::list<DetectionResult> DetectionResultList;
 
 DetectionResult& FirstErrorResult(DetectionResultList& result_list);
+DetectionResultList NormalResultList(const DetectionResultList& result_list);
 
 class ResultFactory
 {

@@ -25,10 +25,18 @@ static DetectionResult err_detectresult;
 
 DetectionResult& FirstErrorResult( DetectionResultList& result_list )
 {
-	if (result_list.begin() != result_list.end())
+	if (result_list.size() > 0)
 		return (*result_list.begin());
-	
+
 	return err_detectresult; /* must not return here */
+}
+
+DetectionResultList NormalResultList( const DetectionResultList& result_list )
+{
+	DetectionResultList ret_list(result_list);
+	if (ret_list.size() > 0)
+		ret_list.pop_front();
+	return ret_list;
 }
 
 shared_ptr<ResultFactory> ResultFactory::GetInstance()

@@ -24,6 +24,7 @@
 #include "../DetectionLib/License.h"
 
 #include <boost/foreach.hpp>
+#include <sstream>
 
 
 #ifdef _DEBUG
@@ -478,14 +479,15 @@ LRESULT CMFC_DetectionView::OnCommProc( WPARAM wParam, LPARAM lParam )
 			//write report
 			if(1 == itsCurrentCheckStep)
 			{
-				itsFirstDetectResult.AddItemReport(GetDetectionProgram()->Name,"ManualCheckCancel",itsFirstDetectResult.IsPass,itsManualTimer.GetTime());
+				FirstErrorResult(itsFirstDetectResult).AddItemReport(GetDetectionProgram()->Name,"ManualCheckCancel",FirstErrorResult(itsFirstDetectResult).IsPass,itsManualTimer.GetTime());
 				m_stopTimer = std::time(NULL);
 				WriteReport(itsFirstDetectResult);
 			}
 			else if(2 == itsCurrentCheckStep)
 			{
-				std::copy(itsFirstDetectResult.Report.rbegin(),itsFirstDetectResult.Report.rend(),front_inserter(itsSecondDetectResult.Report)); // insert first result
-				itsSecondDetectResult.IsPass = itsSecondDetectResult.IsPass & itsFirstDetectResult.IsPass;
+				//std::copy(itsFirstDetectResult.Report.rbegin(),itsFirstDetectResult.Report.rend(),front_inserter(itsSecondDetectResult.Report));
+				std::copy(itsFirstDetectResult.rbegin(),itsFirstDetectResult.rend(),front_inserter(itsSecondDetectResult)); // insert first result
+				FirstErrorResult(itsSecondDetectResult).IsPass = FirstErrorResult(itsSecondDetectResult).IsPass & FirstErrorResult(itsFirstDetectResult).IsPass;
 				m_stopTimer = std::time(NULL);
 				WriteReport(itsSecondDetectResult);
 			}
@@ -497,44 +499,40 @@ LRESULT CMFC_DetectionView::OnCommProc( WPARAM wParam, LPARAM lParam )
 		{			
 			itsCurrentCheckStep = 1;
 			m_startTimer = std::time(NULL); //anyway, start time from here
-			DetectionResultList drl = Detect(img,GetDetectionProgram());
+			itsFirstDetectResult = Detect(img,GetDetectionProgram());
 
-			//save values			
-			itsFirstDetectResult = drl;
 
-			if(m_NeedManualCheck)			
+			if(m_NeedManualCheck)
 				StartManualJudge();
-			if(FirstErrorResult(drl).IsPass) // if only one step and passed, done here
+			if(FirstErrorResult(itsFirstDetectResult).IsPass) // if only one step and passed, done here
 			{
 				gCommObject.SendCommData(0x01); 
 				if(!HasSecondStep())
 				{
 					m_stopTimer = std::time(NULL);
 					//输出report, 
-					WriteReport(drl);
+					WriteReport(itsFirstDetectResult);
 				}
 			}			
 		}
 		else if(cmd == 0xA1)
 		{
 			itsCurrentCheckStep = 2;
-			DetectionResult drl = Detect(img,GetDetectionProgram());			
-			//save values			
-			itsSecondDetectResult = drl;
-
+			itsSecondDetectResult = Detect(img,GetDetectionProgram());
+			
 			if(m_NeedManualCheck)
 				StartManualJudge();
-			if(FirstErrorResult(drl).IsPass) //pass, done here
+			if(FirstErrorResult(itsSecondDetectResult).IsPass) //pass, done here
 			{
 				gCommObject.SendCommData(0x01);
 				//sure has second step,
-				std::copy(itsFirstDetectResult.Report.rbegin(),itsFirstDetectResult.Report.rend(),front_inserter(drl.Report)); // insert first result
-				drl.IsPass = drl.IsPass & itsFirstDetectResult.IsPass;
+				std::copy(itsFirstDetectResult.rbegin(),itsFirstDetectResult.rend(),front_inserter(itsSecondDetectResult)); // insert first result
+				FirstErrorResult(itsSecondDetectResult).IsPass = FirstErrorResult(itsSecondDetectResult).IsPass & FirstErrorResult(itsFirstDetectResult).IsPass;
 				m_stopTimer = std::time(NULL);
 				//输出report,
-				WriteReport(drl);
-				itsFirstDetectResult.Report.clear();
-				itsFirstDetectResult.IsPass = false;
+				WriteReport(itsSecondDetectResult);
+				FirstErrorResult(itsFirstDetectResult).Report.clear();
+				FirstErrorResult(itsFirstDetectResult).IsPass = false;
 			}			
 		}
 	return 0;
@@ -649,41 +647,41 @@ string BuildFileName(const string& strBarCode, const string& extention)
 
 
 
-void CMFC_DetectionView::WriteReport(DetectionResult& dr)
+void CMFC_DetectionView::WriteReport(DetectionResultList& drl)
 {
 	int unitID(0),itemID(0);
 
+	bool first_error_result_replaced = false;
+	ostringstream report_string;
+	BOOST_FOREACH(DetectionResult dr, NormalResultList(drl))
+	{
+		ReportLineList report_line;
+		if(!first_error_result_replaced && !dr.IsPass) // replace first error result
+			report_line = FirstErrorResult(drl).Report;
+		else
+			report_line = dr.Report;
+		BOOST_FOREACH(ReportLine_Ptr& l, report_line)
+		{
+			if(auto item = std::dynamic_pointer_cast<ReportItem>(l))
+			{
+				report_string << ++itemID << "\t" << item->GetReportString() << "\n";
+			}
+		}
+	}
+
 	string filepath = string("D:\\TestData\\") + BuildFileName(m_strBarCode.GetString(),"dat");
 	ofstream dataFile(filepath.c_str());
-
 	dataFile << "ObjectID=" << m_strBarCode.GetString() << "\n";
 	dataFile << "StartTime=" << FormatTimeNomal(m_startTimer).GetString() << "\n";
-
-	int totalNum = 0;
-	BOOST_FOREACH(ReportLine_Ptr& l, dr.Report)
-	{
-		if(auto item = std::dynamic_pointer_cast<ReportItem>(l))
-		{
-			totalNum ++;
-		}
-	}
-	dataFile << "TestSteps="<<totalNum <<"\n";
-
+	dataFile << "TestSteps="<<itemID <<"\n";
 	dataFile << "No.\tTest Item\tLow Limit\tCriterion\tHigh Limit Unit\tP/F\tRemark\tValue1\tTime(ms)\n";
-	BOOST_FOREACH(ReportLine_Ptr& l, dr.Report)
-	{		
-		if(auto item = std::dynamic_pointer_cast<ReportItem>(l))
-		{
-			dataFile << ++itemID << "\t" << item->GetReportString() << "\n";
-		}
-	}
+	dataFile << report_string.str();
 	dataFile << "EndTime=" << FormatTimeNomal(m_stopTimer).GetString() << "\n";
-
 	dataFile.close();
 
 	filepath = string("D:\\TestFlag\\") + BuildFileName(m_strBarCode.GetString(),"flg");
 	ofstream flagFile(filepath.c_str());
-	if(dr.IsPass)
+	if(FirstErrorResult(drl).IsPass)
 		flagFile << 1;
 	else
 		flagFile << 0;
@@ -713,12 +711,12 @@ LRESULT CMFC_DetectionView::OnManualPassProc( WPARAM wParam, LPARAM lParam )
 
 	if(1 == itsCurrentCheckStep)
 	{
-		itsFirstDetectResult.IsPass = bool(MSG_PASS == wParam);
-		itsFirstDetectResult.AddItemReport(GetDetectionProgram()->Name,"ManualCheck",itsFirstDetectResult.IsPass,itsManualTimer.GetTime());
-		if(itsFirstDetectResult.IsPass)
+		FirstErrorResult(itsFirstDetectResult).IsPass = bool(MSG_PASS == wParam);
+		FirstErrorResult(itsFirstDetectResult).AddItemReport(GetDetectionProgram()->Name,"ManualCheck",FirstErrorResult(itsFirstDetectResult).IsPass,itsManualTimer.GetTime());
+		if(FirstErrorResult(itsFirstDetectResult).IsPass)
 		{
-			itsFirstDetectResult.ErrorString = "人工检查通过！";
-			ShowResult(itsFirstDetectResult);
+			FirstErrorResult(itsFirstDetectResult).ErrorString = "人工检查通过！";
+			ShowResult(FirstErrorResult(itsFirstDetectResult));
 		}
 		if(!HasSecondStep()) //only one step, done here
 		{
@@ -728,21 +726,21 @@ LRESULT CMFC_DetectionView::OnManualPassProc( WPARAM wParam, LPARAM lParam )
 	}
 	else if (2 == itsCurrentCheckStep)
 	{
-		itsSecondDetectResult.IsPass = bool(MSG_PASS == wParam);
-		itsSecondDetectResult.AddItemReport(GetDetectionProgram()->Name,"ManualCheck",itsSecondDetectResult.IsPass,itsManualTimer.GetTime());
-		if(itsSecondDetectResult.IsPass)
+		FirstErrorResult(itsSecondDetectResult).IsPass = bool(MSG_PASS == wParam);
+		FirstErrorResult(itsSecondDetectResult).AddItemReport(GetDetectionProgram()->Name,"ManualCheck",FirstErrorResult(itsSecondDetectResult).IsPass,itsManualTimer.GetTime());
+		if(FirstErrorResult(itsSecondDetectResult).IsPass)
 		{
-			itsSecondDetectResult.ErrorString = "人工检查通过！";
-			ShowResult(itsSecondDetectResult);
+			FirstErrorResult(itsSecondDetectResult).ErrorString = "人工检查通过！";
+			ShowResult(FirstErrorResult(itsSecondDetectResult));
 		}
 		//write report
-		std::copy(itsFirstDetectResult.Report.rbegin(),itsFirstDetectResult.Report.rend(),front_inserter(itsSecondDetectResult.Report)); // insert first result
-		itsSecondDetectResult.IsPass = itsSecondDetectResult.IsPass & itsFirstDetectResult.IsPass;
+		std::copy(itsFirstDetectResult.rbegin(),itsFirstDetectResult.rend(),front_inserter(itsSecondDetectResult)); // insert first result
+		FirstErrorResult(itsSecondDetectResult).IsPass = FirstErrorResult(itsSecondDetectResult).IsPass & FirstErrorResult(itsFirstDetectResult).IsPass;
 		m_stopTimer = std::time(NULL);
 		//输出report,
 		WriteReport(itsSecondDetectResult);
-		itsFirstDetectResult.Report.clear();
-		itsFirstDetectResult.IsPass = false;
+		FirstErrorResult(itsFirstDetectResult).Report.clear();
+		FirstErrorResult(itsFirstDetectResult).IsPass = false;
 	}
 	
 	return 0;
