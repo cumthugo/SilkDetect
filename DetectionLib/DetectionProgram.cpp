@@ -30,14 +30,15 @@ void DetectionProgram::Detect( IplImage_Ptr sourceImage,DetectionResultList& res
 		/* just add the result to result list */
 		result.push_back(dr);
 
-		if(first_error_dr.IsPass && !dr.IsPass) // it means first error
+		if(FirstErrorResult(result).IsPass && !dr.IsPass) // it means first error
 		{
-			first_error_dr.IsPass = dr.IsPass;
-			first_error_dr.ErrorString = dr.ErrorString;
+			FirstErrorResult(result).IsPass = dr.IsPass;
+			FirstErrorResult(result).ErrorString = dr.ErrorString;
+			FirstErrorResult(result).Report = dr.Report;
 			
-			cvSetImageROI(first_error_dr.ResultImage,ROIImageRect);
-			cvCopy(dr.ResultImage,first_error_dr.ResultImage);
-			cvResetImageROI(first_error_dr.ResultImage);
+			cvSetImageROI(FirstErrorResult(result).ResultImage,ROIImageRect);
+			cvCopy(dr.ResultImage,FirstErrorResult(result).ResultImage);
+			cvResetImageROI(FirstErrorResult(result).ResultImage);
 		}
 	}
 }

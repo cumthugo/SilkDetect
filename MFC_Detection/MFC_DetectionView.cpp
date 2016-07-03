@@ -231,7 +231,6 @@ void CMFC_DetectionView::OnBnClickedGetPic()
 	IplImage_Ptr img = cvLoadImage("d:\\test.jpg");
 	Detect(img,GetDetectionProgram());
 	
-	
 }
 void CMFC_DetectionView::OnBnClickedGetPic2()
 {
@@ -477,9 +476,12 @@ LRESULT CMFC_DetectionView::OnCommProc( WPARAM wParam, LPARAM lParam )
 			itsInManualConfirming = false;
 			itsManualTimer.Stop();
 			//write report
+			DetectionResult manual_result; //manual_result is used for report
+			manual_result.IsPass = false;
+			manual_result.AddItemReport(GetDetectionProgram()->Name,"ManualCheckCancel",manual_result.IsPass,itsManualTimer.GetTime());
 			if(1 == itsCurrentCheckStep)
 			{
-				FirstErrorResult(itsFirstDetectResult).AddItemReport(GetDetectionProgram()->Name,"ManualCheckCancel",FirstErrorResult(itsFirstDetectResult).IsPass,itsManualTimer.GetTime());
+				itsFirstDetectResult.push_back(manual_result);
 				m_stopTimer = std::time(NULL);
 				WriteReport(itsFirstDetectResult);
 			}
@@ -488,6 +490,7 @@ LRESULT CMFC_DetectionView::OnCommProc( WPARAM wParam, LPARAM lParam )
 				//std::copy(itsFirstDetectResult.Report.rbegin(),itsFirstDetectResult.Report.rend(),front_inserter(itsSecondDetectResult.Report));
 				std::copy(itsFirstDetectResult.rbegin(),itsFirstDetectResult.rend(),front_inserter(itsSecondDetectResult)); // insert first result
 				FirstErrorResult(itsSecondDetectResult).IsPass = FirstErrorResult(itsSecondDetectResult).IsPass & FirstErrorResult(itsFirstDetectResult).IsPass;
+				itsSecondDetectResult.push_back(manual_result);
 				m_stopTimer = std::time(NULL);
 				WriteReport(itsSecondDetectResult);
 			}
@@ -657,7 +660,10 @@ void CMFC_DetectionView::WriteReport(DetectionResultList& drl)
 	{
 		ReportLineList report_line;
 		if(!first_error_result_replaced && !dr.IsPass) // replace first error result
+		{
 			report_line = FirstErrorResult(drl).Report;
+			first_error_result_replaced = true;
+		}
 		else
 			report_line = dr.Report;
 		BOOST_FOREACH(ReportLine_Ptr& l, report_line)
@@ -709,10 +715,14 @@ LRESULT CMFC_DetectionView::OnManualPassProc( WPARAM wParam, LPARAM lParam )
 		gCommObject.SendCommData(0x02);
 	itsManualTimer.Stop();
 
+	DetectionResult manual_result; //manual_result is used for report
+	manual_result.IsPass = bool(MSG_PASS == wParam);
+	manual_result.AddItemReport(GetDetectionProgram()->Name,"ManualCheck",manual_result.IsPass,itsManualTimer.GetTime());
+
 	if(1 == itsCurrentCheckStep)
 	{
-		FirstErrorResult(itsFirstDetectResult).IsPass = bool(MSG_PASS == wParam);
-		FirstErrorResult(itsFirstDetectResult).AddItemReport(GetDetectionProgram()->Name,"ManualCheck",FirstErrorResult(itsFirstDetectResult).IsPass,itsManualTimer.GetTime());
+		itsFirstDetectResult.push_back(manual_result);
+		FirstErrorResult(itsFirstDetectResult).IsPass =  bool(MSG_PASS == wParam);
 		if(FirstErrorResult(itsFirstDetectResult).IsPass)
 		{
 			FirstErrorResult(itsFirstDetectResult).ErrorString = "人工检查通过！";
@@ -726,8 +736,8 @@ LRESULT CMFC_DetectionView::OnManualPassProc( WPARAM wParam, LPARAM lParam )
 	}
 	else if (2 == itsCurrentCheckStep)
 	{
+		itsSecondDetectResult.push_back(manual_result);
 		FirstErrorResult(itsSecondDetectResult).IsPass = bool(MSG_PASS == wParam);
-		FirstErrorResult(itsSecondDetectResult).AddItemReport(GetDetectionProgram()->Name,"ManualCheck",FirstErrorResult(itsSecondDetectResult).IsPass,itsManualTimer.GetTime());
 		if(FirstErrorResult(itsSecondDetectResult).IsPass)
 		{
 			FirstErrorResult(itsSecondDetectResult).ErrorString = "人工检查通过！";
