@@ -11,12 +11,13 @@ void FrontDetectionUnit::DetectAlgorithm(const IplImage_Ptr sourceImage ,const C
 	cl.Stop();
 	result.AddItemReport(this->Name,"Silk",result.IsPass,cl.GetTime());
 	
-	if(!result.IsPass) return;
+	bool bSilkDetectResult = result.IsPass; //temp save silk detect result
 	cl.Start();
 	Lock.DetectFlag = ObjectDetectAlgorithm::DETECT_FLAG_DISAPPEAR;
 	Lock.Detect(sourceImage,PedestalRect,PedestalPosition,result);
 	cl.Stop();
 	result.AddItemReport(this->Name,"Lock",result.IsPass,cl.GetTime());
+	result.IsPass = bSilkDetectResult && result.IsPass;
 }
 
 ptree FrontDetectionUnit::GetTree() const
